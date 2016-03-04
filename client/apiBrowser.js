@@ -5,6 +5,9 @@
 // using now
 var viewApp = angular.module('viewApp', []);
 
+// [ ] we can't use views, as the context scope keeps switching
+// we should try to use just show and hide
+
 // create the controller and inject Angular's $scope
 // we will use this to call methods on this controller to
 // switch views
@@ -135,7 +138,7 @@ viewApp.controller('mainController', function($scope,$http,LS) {
             // return element.name.match(/=/) ? true : false;
         $scope.searchableFields = function(element) {
             // check if the field exists
-            console.log ( 'filter elem', element )
+            // console.log ( 'filter elem', element );
             return element.searchable_by ? true : false;
         };
 
@@ -152,9 +155,8 @@ viewApp.controller('mainController', function($scope,$http,LS) {
             });
     };
 
-    /*
     // and now a function to switch into different templates without
-    // using routes
+    // using routes, used by the navbar
     //
     $scope.goTo = function(myView,data) {
         console.log( 'switch to view ' , myView , ' scope:' , $scope );
@@ -162,5 +164,6 @@ viewApp.controller('mainController', function($scope,$http,LS) {
         $scope.template = myView + ".html";
         $scope.message = 'This is the '+ myView + ' message';
     };
+    /*
     */
 });

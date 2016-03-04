@@ -1,6 +1,11 @@
 <div class="jumbotron text-center">
     <h2 >Select an object</h2>
 
+    <!-- make this a pulldown list
+    http://mgcrea.github.io/angular-strap/##typeaheads
+    -->
+
+
     <p ng-repeat="obj in objects">
         <a ng-click="searchObject(obj)">{{obj}}</a>
     </p>

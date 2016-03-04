@@ -4,9 +4,11 @@
     <!--
     <p ng-repeat="field in schema | filter: { name: query, age: '20' }">
     -->
-    <p ng-repeat="field in schema | filter: searchableFields">
+    <p ng-repeat="field in schema | filter: searchableFields
+        | orderBy:'-standard_field' ">
         {{field.name}}
-        {{field.searchable_by}} 
+        {{field.searchable_by}}
+        {{field.standard_field}}
 
     </p>
 
