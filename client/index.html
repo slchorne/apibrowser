@@ -1,0 +1,65 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html ng-app="viewApp">
+<head>
+    <!--
+  <base href="/">
+  <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" />
+    -->
+  <!-- load CSS from bootstrap and fontawesome via CDN -->
+  <link rel="stylesheet" href="bootstrap.min.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+
+  <!-- load angular and angular route via CDN -->
+  <!--
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-route.js"></script>
+  -->
+  <script src="angular.js"></script>
+  <!--
+  <script src="angular-route.js"></script>
+  -->
+
+ <!-- load the main controller -->
+  <script src="apiBrowser.js"></script>
+
+</head>
+<body ng-controller="mainController">
+
+    <!-- HEADER AND NAVBAR -->
+    <!--
+                <a class="navbar-brand" href="/">WAPI Browser</a>
+    -->
+
+    <header>
+        <nav class="navbar navbar-default">
+        <div class="container">
+            <div class="navbar-header">
+                <p class="navbar-brand" >WAPI Browser</p>
+            </div>
+
+            <ul class="nav navbar-nav navbar-right">
+                <!-- no href required in this context for the <a> tag-->
+                <li><a ng-click="goTo('objects')"><i class="fa fa-bars">&nbsp;</i> Objects</a></li>
+                <li><a ng-click="goTo('settings')"><i class="fa fa-cogs">&nbsp;</i> Settings</a></li>
+            </ul>
+        </div>
+        </nav>
+    </header>
+
+    <!-- MAIN CONTENT AND INJECTED VIEWS -->
+    <!--
+    We don't have to use views or routes, we can just use ng-show
+    But, we will try using views first
+    -->
+    <div id="main" ng-include="template">
+
+        <!-- angular templating, use ng-view -->
+        <!-- this is where content will be injected -->
+
+        {{ message }}
+
+    </div>
+
+</body>
+</html>

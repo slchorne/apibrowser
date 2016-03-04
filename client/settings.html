@@ -1,0 +1,61 @@
+
+<div class="row">
+       <div class="form-background
+          col-xs-8 col-xs-offset-1
+          col-sm-4 col-sm-offset-1
+          col-md-4 col-md-offset-1">
+
+<!--
+    class="form-horizontal"
+-->
+
+<form name="userForm"
+    ng-controller="mainController">
+
+        <div id="server-group" class="form-group">
+            <!-- sr-only hides the text but for accessability readers -->
+            <label class="sr-only" for="userServer">Grid Master</label>
+            <input type="text" name="userServer" ng-model="formFields.server"
+                id="userServer"
+                required
+                class="form-control" placeholder="GridMaster">
+            <span class="text-danger" ng-show="userForm.userServer.$invalid">
+                Enter a valid fqdn</span>
+        </div>
+
+        <div id="name-group" class="form-group">
+            <label class="sr-only" for="userName">Username</label>
+            <input type="text" name="userName" ng-model="formFields.name"
+                id="userName"
+                required
+                class="form-control" placeholder="Your name">
+            <span class="text-danger" ng-show="userForm.userName.$invalid">
+                Enter a valid name</span>
+        </div>
+
+        <!-- EMAIL -->
+        <div id="password-group" class="form-group">
+            <label class="sr-only" for="userPass">Password</label>
+            <input type="password" name="userPass" ng-model="formFields.password"
+                id="userPass"
+                required
+                class="form-control" placeholder="Password"
+        </div>
+        <br/>
+
+        <!--
+            <span class="text-danger" ng-show="userForm.userPass.$invalid">
+                Enter a valid password</span>
+        <button ng-show="userForm.$valid"
+        -->
+
+        <button
+          type="submit"
+          class="btn btn-success btn-sm btn-block"
+          ng-click="saveUser()"> Login
+        </button>
+
+</form>
+
+</div><!--cols-->
+</div><!--row-->

@@ -1,0 +1,13 @@
+<div class="jumbotron text-center">
+    <h2>search Objects : {{myObject}}</h2>
+
+    <!--
+    <p ng-repeat="field in schema | filter: { name: query, age: '20' }">
+    -->
+    <p ng-repeat="field in schema | filter: searchableFields">
+        {{field.name}}
+        {{field.searchable_by}} 
+
+    </p>
+
+</div>
