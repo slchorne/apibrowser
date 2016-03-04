@@ -1,15 +1,87 @@
-<div class="jumbotron text-center">
-    <h2>search Objects : {{myObject}}</h2>
+<div class="text-center">
+    <h3>search Objects : {{myObject}}</h3>
+    <p>{{searchUrl}}</p>
+</div>
 
     <!--
+<div class="jumbotron text-center">
     <p ng-repeat="field in schema | filter: { name: query, age: '20' }">
+          ng-blur="generateSearchQuery"
     -->
-    <p ng-repeat="field in schema | filter: searchableFields
-        | orderBy:'-standard_field' ">
-        {{field.name}}
+
+    <!--
+     generate a form for the searchable fields,
+     standard_fields are ordered first to make them easier to see
+     Also generate a URL string
+
+     We will update the $scope.searchFields model
+
+     doing a real-time update of the URL string is trick because of how
+     angular changes scope in ng-repeat. So for the moment, we will just
+     generate the string when we hit 'search'
+    -->
+<div class="form-horizontal">
+
+        <!--
+            use ng-init to flip the bit on the checkbox
+            use ng-model to add a field to the schema
+                ng-model="field.modContains"
+                checked
         {{field.searchable_by}}
-        {{field.standard_field}}
+        -->
 
-    </p>
+    <div
+        ng-repeat="field in schemaFields | filter: searchableFields
+        | orderBy:'-standard_field' "
+        class="form-group">
 
+        <label for="search{{field.name}}"
+        class="col-sm-3 control-label">{{field.name}}</label>
+
+        <div class="col-sm-5">
+          <input type="text" class="form-control input-sm"
+          ng-model="field.fieldValue"
+          id="search{{field.name}}" placeholder="">
+        </div>
+
+
+        <label ng-show="modifierContains(field)"
+            class="checkbox-inline">
+          <input type="checkbox"
+                id="search{{field.name}}ModContains"
+                ng-init="field.modContains=true"
+                ng-model="field.modContains"
+                >
+          contains
+        </label>
+        <label ng-show="modifierCase(field)"
+            class="checkbox-inline">
+          <input type="checkbox"
+                id="search{{field.name}}ModCase"
+                ng-init="field.modCase=true"
+                ng-model="field.modCase"
+                >
+          ignore case
+        </label>
+
+    </div>
+
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-2">
+            <button
+              type="submit"
+              class="btn btn-success btn-sm btn-block"
+              ng-click="searchForObject()"> Search
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<div class="container-fluid" ng-show="searchResults">
+  <div class="row">
+      <div class="col-sm-offset-3 col-sm-6">
+          <json-formatter json="searchResults" open="2"> </json-formatter>
+      </div>
+  </div>
 </div>
