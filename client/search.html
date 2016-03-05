@@ -1,6 +1,7 @@
 <div class="text-center">
     <h3>search Objects : {{myObject}}</h3>
     <p>{{searchUrl}}</p>
+    <p>{{generateSearchQuery}}</p>
 </div>
 
     <!--
@@ -16,9 +17,9 @@
 
      We will update the $scope.searchFields model
 
-     doing a real-time update of the URL string is trick because of how
-     angular changes scope in ng-repeat. So for the moment, we will just
-     generate the string when we hit 'search'
+     And we call an ng-change to real-time update of the
+     example query string
+
     -->
 <div class="form-horizontal">
 
@@ -40,8 +41,9 @@
 
         <div class="col-sm-5">
           <input type="text" class="form-control input-sm"
-          ng-model="field.fieldValue"
-          id="search{{field.name}}" placeholder="">
+              ng-change="generateSearchQuery()"
+              ng-model="field.fieldValue"
+              id="search{{field.name}}" placeholder="">
         </div>
 
 
@@ -51,6 +53,7 @@
                 id="search{{field.name}}ModContains"
                 ng-init="field.modContains=true"
                 ng-model="field.modContains"
+                ng-change="generateSearchQuery()"
                 >
           contains
         </label>
@@ -60,6 +63,7 @@
                 id="search{{field.name}}ModCase"
                 ng-init="field.modCase=true"
                 ng-model="field.modCase"
+                ng-change="generateSearchQuery()"
                 >
           ignore case
         </label>

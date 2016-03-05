@@ -194,17 +194,9 @@ viewApp.controller('mainController',
     //
     // handler for when we input search values to generate
     // a real-time query string.
-    // -- GNDN for now --
     //
     $scope.generateSearchQuery = function(el) {
-        console.log('field change',el);
-    };
-
-    //
-    // do the specific object search
-    //
-    $scope.searchForObject = function(el) {
-        // console.log('search fields',$scope.schemaFields);
+        // console.log('field change',el);
 
         // the html will add a new field to the schema 'fieldValue'
         // and some modifier flags
@@ -225,7 +217,7 @@ viewApp.controller('mainController',
                 qv += field.modContains ? '~' : '' ;
                 qv += '=' + field.fieldValue;
                 qs.push(qv);
-                console.log ('qv', qv);
+                // console.log ('qv', qv);
             }
         });
         var queryString = qs.join('&');
@@ -233,6 +225,22 @@ viewApp.controller('mainController',
         // $scope.searchUrl = wapi.url + $scope.myObject + '?' + queryString ;
         var searchPath = $scope.myObject + '?' + queryString;
         // (display only)
+        $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
+
+        return searchPath ;
+
+        // var searchPath = $scope.generateSearchQuery();
+
+    };
+
+    //
+    // do the specific object search
+    //
+    $scope.searchForObject = function(el) {
+        // console.log('search fields',$scope.schemaFields);
+
+        var searchPath = $scope.generateSearchQuery();
+        // (display only, should be redundant)
         $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
 
         // and punt to a search
@@ -249,8 +257,6 @@ viewApp.controller('mainController',
                 // error, HTTP errors
                 console.log( 'HTTP error' );
             });
-
-
     };
 
     //
