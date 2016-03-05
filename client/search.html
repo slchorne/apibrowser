@@ -2,6 +2,7 @@
     <h3>search Objects : {{myObject}}</h3>
     <p>{{searchUrl}}</p>
 
+    <p class="alert alert-danger" ng-show="schemaErrors">{{schemaErrors}}</p>
     <p class="alert alert-danger" ng-show="searchErrors">{{searchErrors}}</p>
 </div>
 
@@ -97,7 +98,7 @@
 
     </div>
 
-    <div class="form-group" ng-show="!searchErrors">
+    <div class="form-group" ng-show="!schemaErrors">
         <div class="col-sm-offset-3 col-sm-2">
             <button
               type="submit"

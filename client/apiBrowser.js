@@ -243,6 +243,7 @@ viewApp.controller('mainController',
         var searchPath = $scope.generateSearchQuery();
         // (display only, should be redundant)
         $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
+        $scope.searchErrors = null;
 
         // and punt to a search
         $http.get( wapi.url + searchPath , wapi.headers )
@@ -253,6 +254,9 @@ viewApp.controller('mainController',
                 // then just expose the data to the HTML
                 // and process it there
                 $scope.searchResults = response.data;
+                if ( response.data.length === 0 ){
+                    $scope.searchErrors = "No objects match the search";
+                }
 
             },function(response){
                 // error, HTTP errors
@@ -308,7 +312,7 @@ viewApp.controller('mainController',
                 $scope.schemaFields = response.data.fields;
 
                 if ( response.data.fields.length === 0 ) {
-                    $scope.searchErrors = "This object has no searchable fields";
+                    $scope.schemaErrors = "This object has no searchable fields";
 
                 }
 
@@ -327,7 +331,7 @@ viewApp.controller('mainController',
         // $scope.template = "pages/home.html";
         $scope.template = myView + ".html";
         $scope.schemaLoaded = false ;
-        $scope.searchErrors = null ;
+        $scope.schemaErrors = null ;
         $scope.message = 'This is the '+ myView + ' message';
     };
     /*
