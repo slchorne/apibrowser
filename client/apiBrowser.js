@@ -278,6 +278,12 @@ viewApp.controller('mainController',
             return element.searchable_by ? true : false;
         };
 
+        $scope.fieldIsText = function(element) {
+            return element.type.indexOf('enum') < 0 ? true : false;
+        };
+        $scope.fieldIsEnum = function(element) {
+            return element.type.indexOf('enum') >= 0 ? true : false;
+        };
         $scope.fieldIsBoolean = function(element) {
             return element.type.indexOf('bool') >= 0 ? true : false;
         };
@@ -299,6 +305,11 @@ viewApp.controller('mainController',
                 $scope.schemaLoaded = true ;
                 $scope.schemaFields = response.data.fields;
 
+                if ( response.data.fields.length === 0 ) {
+                    $scope.searchErrors = "This object has no searchable fields";
+
+                }
+
             },function(response){
                 // error, HTTP errors
                 console.log( 'HTTP error' );
@@ -314,6 +325,7 @@ viewApp.controller('mainController',
         // $scope.template = "pages/home.html";
         $scope.template = myView + ".html";
         $scope.schemaLoaded = false ;
+        $scope.searchErrors = null ;
         $scope.message = 'This is the '+ myView + ' message';
     };
     /*

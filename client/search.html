@@ -1,7 +1,8 @@
 <div class="text-center">
     <h3>search Objects : {{myObject}}</h3>
     <p>{{searchUrl}}</p>
-    <p>{{generateSearchQuery}}</p>
+
+    <p class="alert alert-danger" ng-show="searchErrors">{{searchErrors}}</p>
 </div>
 
     <!--
@@ -40,11 +41,22 @@
         class="col-sm-3 control-label">{{field.name}}</label>
 
         <!-- text fields 'name=true|false'-->
-        <div class="col-sm-5">
+        <div class="col-sm-5" ng-show="fieldIsText(field)">
           <input type="text" class="form-control input-sm"
               ng-change="generateSearchQuery()"
               ng-model="field.fieldValue"
               id="search{{field.name}}" placeholder="">
+        </div>
+
+        <div class="col-sm-5" ng-show="fieldIsEnum(field)">
+            <select class="form-control"
+              ng-change="generateSearchQuery()"
+              ng-model="field.fieldValue"
+                >
+              <option></option>
+              <option ng-repeat="v in field.enum_values">{{v}}</option>
+
+            </select>
         </div>
 
         <!-- boolean fields 'name=true|false'-->
@@ -78,7 +90,7 @@
 
     </div>
 
-    <div class="form-group">
+    <div class="form-group" ng-show="!searchErrors">
         <div class="col-sm-offset-3 col-sm-2">
             <button
               type="submit"
