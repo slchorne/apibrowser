@@ -145,8 +145,8 @@ viewApp.controller('mainController',
         var vlist = data.supported_versions;
         wapi.maxVersion = vlist[vlist.length-1];
         wapi.version = wapi.maxVersion;
-        wapi.url = wapi.proxy + wapi.server +
-            '/wapi/v' + wapi.version + '/';
+        wapi.path = wapi.server + '/wapi/v' + wapi.version + '/';
+        wapi.url = wapi.proxy + wapi.path ;
 
         console.log ( 'max rev', wapi);
         // then re-load the schema
@@ -221,8 +221,8 @@ viewApp.controller('mainController',
         angular.forEach($scope.schemaFields, function(field){
             if ( field.fieldValue ) {
                 var qv = field.name ;
-                qv += field.modCase ? ':' : null ;
-                qv += field.modContains ? '~' : null ;
+                qv += field.modCase ? ':' : '' ;
+                qv += field.modContains ? '~' : '' ;
                 qv += '=' + field.fieldValue;
                 qs.push(qv);
                 console.log ('qv', qv);
@@ -230,10 +230,13 @@ viewApp.controller('mainController',
         });
         var queryString = qs.join('&');
         // reset the search url
-        $scope.searchUrl = wapi.url + $scope.myObject + '?' + queryString ;
+        // $scope.searchUrl = wapi.url + $scope.myObject + '?' + queryString ;
+        var searchPath = $scope.myObject + '?' + queryString;
+        // (display only)
+        $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
 
         // and punt to a search
-        $http.get( $scope.searchUrl, wapi.headers )
+        $http.get( wapi.url + searchPath , wapi.headers )
             .then(function(response){
                 // success
                 console.log( 'object search ' , response.data );
@@ -257,7 +260,7 @@ viewApp.controller('mainController',
         console.log( 'switch to search ' , myObj );
         $scope.myObject = myObj;
         $scope.template = "search.html";
-        $scope.searchUrl = wapi.url + myObj ;
+        $scope.searchUrl = 'https://'+ wapi.path + myObj ;
         $scope.searchResults = null ;
 
         // define some filters for listing the schema
@@ -295,7 +298,7 @@ viewApp.controller('mainController',
     // using routes, this is used by the navbar
     //
     $scope.goTo = function(myView,data) {
-        console.log( 'switch to view ' , myView , ' scope:' , $scope );
+        // console.log( 'switch to view ' , myView , ' scope:' , $scope );
         // $scope.template = "pages/home.html";
         $scope.template = myView + ".html";
         $scope.message = 'This is the '+ myView + ' message';
@@ -316,7 +319,7 @@ viewApp.controller('mainController',
         wapi.server = vls.server;
         $scope.template = "objects.html";
 
-        console.log ( 'relog wapi', wapi);
+        console.log ( 're-use credentials', wapi);
         $scope.getSchema();
     }
     else {
