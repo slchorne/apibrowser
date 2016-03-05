@@ -246,6 +246,7 @@ viewApp.controller('mainController',
         $scope.searchErrors = null;
 
         // and punt to a search
+        $scope.httpErrors = null;
         $http.get( wapi.url + searchPath , wapi.headers )
             .then(function(response){
                 // success
@@ -260,7 +261,11 @@ viewApp.controller('mainController',
 
             },function(response){
                 // error, HTTP errors
-                console.log( 'HTTP error' );
+                // [ ] errors need to be passed to a global handler
+                console.log( 'HTTP error' , response );
+                $scope.httpErrors = response.status +
+                    ":" + response.data.Error ;
+
             });
     };
 
