@@ -1,13 +1,29 @@
-<div class="jumbotron text-center">
+<div class="text-center">
     <h2 >Select an object</h2>
 
-    <!-- make this a pulldown list
+    <!-- make this a pulldown list ?
     http://mgcrea.github.io/angular-strap/##typeaheads
+
+    <p ng-repeat="obj in objects" >
+        <a ng-click="searchObjectPage(obj)" >{{obj}}</a>
+    </p>
     -->
 
+    <div class="container-fluid">
+    <div class="row">
+    <div class="col-sm-offset-3 col-sm-6">
 
-    <p ng-repeat="obj in objects">
-        <a ng-click="searchObjectPage(obj)">{{obj}}</a>
-    </p>
+        <div class="list-group">
+            <button type="button"
+                ng-repeat="obj in objects"
+                ng-click="searchObjectPage(obj)"
+                class="text-center lead list-group-item">{{obj}}</button>
+        </div>
+
+    </div>
+    </div>
+    </div>
+
+
 
 </div>

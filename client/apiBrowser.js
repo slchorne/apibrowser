@@ -236,7 +236,10 @@ viewApp.controller('mainController',
         // var useFields = $scope.schemaFields.filter(function(a) {
         //     return a.fieldValue ? true : false; });
 
+        // we also want to track the _return_fields
+
         var qs = [];
+        var rfields = [];
         angular.forEach($scope.schemaFields, function(field){
             if ( field.fieldValue ) {
                 var qv = field.name ;
@@ -244,10 +247,19 @@ viewApp.controller('mainController',
                 qv += field.modContains ? '~' : '' ;
                 qv += '=' + field.fieldValue;
                 qs.push(qv);
+                rfields.push(field.name);
                 // console.log ('qv', qv, field );
             }
         });
+        // var rstring = '_return_fields%2B='+ rfields.join(',');
+        // qs.push( rstring );
+        qs.push( '_return_fields%2B='+ rfields.join(',') );
+
+        // 'encodeURIComponent' is too strong a hammer
+        // var queryString = encodeURIComponent( qs.join('&') );
+        // var queryString = encodeURI( qs.join('&') );
         var queryString = qs.join('&');
+
         // reset the search url
         // $scope.searchUrl = wapi.url + $scope.myObject + '?' + queryString ;
         var searchPath = $scope.myObject + '?' + queryString;
@@ -302,6 +314,7 @@ viewApp.controller('mainController',
         $scope.template = "search.html";
         $scope.searchUrl = 'https://'+ wapi.path + myObj ;
         $scope.searchResults = null ;
+        $scope.searchErrors = null;
 
         // define some filters for listing the schema
             // return element.name.match(/=/) ? true : false;
@@ -312,8 +325,8 @@ viewApp.controller('mainController',
         };
 
         $scope.fieldIsText = function(element) {
-            if ( element.type.indexOf('enum') >= 0 ) { return false }
-            if ( element.type.indexOf('bool') >= 0 ) { return false }
+            if ( element.type.indexOf('enum') >= 0 ) { return false; }
+            if ( element.type.indexOf('bool') >= 0 ) { return false; }
             return true ;
         };
         $scope.fieldIsEnum = function(element) {
