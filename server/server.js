@@ -80,7 +80,9 @@ app.use('/wapip', function(req, res) {
   req.pipe(request(options)
       // make sure we catch errors
       .on('error', function(err) {
-        console.log(err);
+          res.status(404).send(err);
+        //   res.send( errorMsg( 404 , err ) );
+          console.log(err);
       })
     ).pipe(res);
 });

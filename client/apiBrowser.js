@@ -62,6 +62,28 @@ var setAuthHeader = function(authkey) {
     return wapi.headers;
 };
 
+var getErrorMsg = function(response) {
+    // Errors can be text, XML or json,
+    // so we try and parse them as best we can
+    var msg = response.data ;
+    if ( msg.match(/DOCTYPE HTML/)) {
+        return response.status + " : " + msg ;
+    }
+
+    // the json encoder will convert regular srings as well
+    var json = angular.toJson( response.data );
+    if ( json ) {
+        msg = json ;
+        if ( json.Error ) {
+            msg = json.Error;
+        }
+    }
+
+    console.log ( 'getErrorMsg:json', json );
+
+    return response.status + " : " + msg ;
+};
+
 
 viewApp.controller('mainController',
     function($scope,$http,$localStorage,$filter) {
@@ -127,6 +149,7 @@ viewApp.controller('mainController',
         // then make a request to get the schema
         // we should only have to set the headers once,
         // the cookie should do the rest
+        $scope.httpErrors = null;
         $http.get(wapi.url +'?_schema' , wapi.headers )
             .then(function(response){
                 // success
@@ -137,7 +160,8 @@ viewApp.controller('mainController',
 
             },function(response){
                 // error, HTTP errors
-                console.log( 'HTTP error' );
+                // console.log( 'HTTP error' );
+                $scope.httpErrors = getErrorMsg( response );
             });
 
     };
@@ -158,6 +182,7 @@ viewApp.controller('mainController',
         // now we have the CORRECT version for this api,
         // load the correct schema
 
+        $scope.httpErrors = null;
         $http.get(wapi.url +'?_schema' , wapi.headers )
         // $http.get(wapi.url +'?_schema' )
             .then(function(response){
@@ -175,6 +200,7 @@ viewApp.controller('mainController',
             },function(response){
                 // error, HTTP errors
                 console.log( 'HTTP error' );
+                $scope.httpErrors = getErrorMsg( response );
             });
 
     };
@@ -263,9 +289,7 @@ viewApp.controller('mainController',
                 // error, HTTP errors
                 // [ ] errors need to be passed to a global handler
                 console.log( 'HTTP error' , response );
-                $scope.httpErrors = response.status +
-                    ":" + response.data.Error ;
-
+                $scope.httpErrors = response.status + ":" + response.data.Error ;
             });
     };
 
@@ -306,6 +330,7 @@ viewApp.controller('mainController',
         };
 
         // get the schema for this object and expose it to the html
+        $scope.httpErrors = null;
         $http.get(wapi.url + myObj + '?_schema' , wapi.headers)
             .then(function(response){
                 // success
@@ -324,6 +349,7 @@ viewApp.controller('mainController',
             },function(response){
                 // error, HTTP errors
                 console.log( 'HTTP error' );
+                $scope.httpErrors = getErrorMsg( response );
             });
 
     };
