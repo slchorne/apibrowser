@@ -38,55 +38,82 @@ var wapi = {
 
 // localstorage handlers, built as a factory
 viewApp.factory("$localStorage", function($window, $rootScope) {
+  var keyname = 'WapiBrowser';
   return {
     setData: function(val) {
       var jval = angular.toJson(val);
-      $window.localStorage && $window.localStorage.setItem('my-storage', jval);
+      $window.localStorage && $window.localStorage.setItem(keyname, jval);
       return this;
     },
     getData: function() {
-      var jval = $window.localStorage && $window.localStorage.getItem('my-storage');
+      var jval = $window.localStorage && $window.localStorage.getItem(keyname);
       return angular.fromJson(jval);
     }
   };
 });
 
+//
+// initial global functions, outside of $scope to
+// avoid race conditions with the parser
+//
+var setAuthHeader = function(authkey) {
+    var authorization = {'Authorization': 'Basic ' + authkey};
+    wapi.headers = { headers: authorization };
+    return wapi.headers;
+};
+
+
 viewApp.controller('mainController',
-    function($scope,$http,$localStorage,$filter,Base64) {
+    function($scope,$http,$localStorage,$filter) {
 
     // create scope variables that link to the view(s)
     $scope.formFields = {};
     $scope.searchFields = {};
 
-    //
+    // local storage could be empty
     var vls = $localStorage.getData();
-    $scope.formFields = vls ;
+    $scope.formFields = vls ? vls : {};
     console.log ( 'load local storage', vls );
 
-    // set a default template for our view, usually the settings
-    $scope.template = "settings.html";
-    $scope.message = 'This is the settings';
+    // any more code has to run at the END of this controller
+    // AFTER we have defined any methods that we want to use.
 
     //-- methods go here --
 
+    //
     // the initial login function
+    //
     $scope.saveUser = function() {
-        var cred = $scope.formFields;
-        console.log( 'save user', cred );
+
+        // create a copy of the fields so we can massage the data,
+        var cred = angular.copy($scope.formFields);
 
         // create the basic auth
         var credentials = btoa( cred.name + ':' + cred.password );
-        var authorization = {'Authorization': 'Basic ' + credentials};
-        wapi.headers = { headers: authorization };
+        setAuthHeader(credentials);
 
-        console.log ( 'header', wapi.headers);
+        // cleanse the password and store the keys
+        delete cred.password;
+        cred.authkey = credentials ;
+        // console.log ( 'header', wapi.headers);
+        // console.log( 'save user', cred );
 
-        $localStorage.setData($scope.formFields);
+        $localStorage.setData(cred);
+        wapi.server = $scope.formFields.server;
+
+        // now we can load the schema
+        $scope.getSchema();
+
+    };
+
+    //
+    // load the schema and check the supported version
+    //
+    $scope.getSchema = function() {
 
         // generate the URL for the server
         // to avoid XSS problems we punt to ourselves, with a proxy URL
         // so we just keep the domain part of the url
-        wapi.server = $scope.formFields.server;
         wapi.url = wapi.proxy + wapi.server +
             '/wapi/v' + wapi.version + '/';
 
@@ -103,8 +130,42 @@ viewApp.controller('mainController',
             .then(function(response){
                 // success
                 console.log( 'schema' , response.data );
+
+                // punt to check the API version
+                $scope.checkApiVersion(response.data);
+
+            },function(response){
+                // error, HTTP errors
+                console.log( 'HTTP error' );
+            });
+
+    };
+
+    $scope.checkApiVersion = function(data) {
+        var vlist = data.supported_versions;
+        wapi.maxVersion = vlist[vlist.length-1];
+        wapi.version = wapi.maxVersion;
+        wapi.url = wapi.proxy + wapi.server +
+            '/wapi/v' + wapi.version + '/';
+
+        console.log ( 'max rev', wapi);
+        // then re-load the schema
+        $scope.getLatestSchema();
+    };
+
+    $scope.getLatestSchema = function() {
+        // now we have the CORRECT version for this api,
+        // load the correct schema
+
+        $http.get(wapi.url +'?_schema' , wapi.headers )
+        // $http.get(wapi.url +'?_schema' )
+            .then(function(response){
+                // success
+                console.log( 'new schema' , response.data );
                 console.log( 'wapi' , wapi );
-                $scope.checkSchema(response.data);
+
+                // and now load this in the HTML
+                // and switch the views
                 $scope.listObjects(response.data);
 
                 // $scope.$parent.goTo('objects',response.data);
@@ -117,18 +178,9 @@ viewApp.controller('mainController',
 
     };
 
-    $scope.checkSchema = function(data) {
-        var vlist = data.supported_versions;
-        wapi.maxVersion = vlist[vlist.length-1];
-        wapi.version = wapi.maxVersion;
-        wapi.url = wapi.proxy + wapi.server +
-            '/wapi/v' + wapi.version + '/';
-
-        console.log ( 'max rev', wapi);
-    };
-
     //
     // handler to render the list of objects to work on
+    // and switch the views
     //
     $scope.listObjects = function(data) {
         // hardcode the view
@@ -181,7 +233,7 @@ viewApp.controller('mainController',
         $scope.searchUrl = wapi.url + $scope.myObject + '?' + queryString ;
 
         // and punt to a search
-        $http.get( $scope.searchUrl )
+        $http.get( $scope.searchUrl, wapi.headers )
             .then(function(response){
                 // success
                 console.log( 'object search ' , response.data );
@@ -223,7 +275,7 @@ viewApp.controller('mainController',
         };
 
         // get the schema for this object and expose it to the html
-        $http.get(wapi.url + myObj + '?_schema' )
+        $http.get(wapi.url + myObj + '?_schema' , wapi.headers)
             .then(function(response){
                 // success
                 console.log( 'object schema' , response.data );
@@ -250,90 +302,26 @@ viewApp.controller('mainController',
     };
     /*
     */
-});
 
-viewApp.factory('Base64', function () {
-    /* jshint ignore:start */
+    //*****************
+    // MAIN code
+    // Called when we first launch the controller
+    //*****************
 
-    var keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    // work out which view to show
+    // by setting the template
+    if ( vls && vls.authkey ) {
+        // We have logged in before, and we can jump to the objects list
+        setAuthHeader(vls.authkey);
+        wapi.server = vls.server;
+        $scope.template = "objects.html";
 
-    return {
-        encode: function (input) {
-            var output = "";
-            var chr1, chr2, chr3 = "";
-            var enc1, enc2, enc3, enc4 = "";
-            var i = 0;
+        console.log ( 'relog wapi', wapi);
+        $scope.getSchema();
+    }
+    else {
+        // prompt for a login
+        $scope.template = "settings.html";
+    }
 
-            do {
-                chr1 = input.charCodeAt(i++);
-                chr2 = input.charCodeAt(i++);
-                chr3 = input.charCodeAt(i++);
-
-                enc1 = chr1 >> 2;
-                enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
-                enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
-                enc4 = chr3 & 63;
-
-                if (isNaN(chr2)) {
-                    enc3 = enc4 = 64;
-                } else if (isNaN(chr3)) {
-                    enc4 = 64;
-                }
-
-                output = output +
-                    keyStr.charAt(enc1) +
-                    keyStr.charAt(enc2) +
-                    keyStr.charAt(enc3) +
-                    keyStr.charAt(enc4);
-                chr1 = chr2 = chr3 = "";
-                enc1 = enc2 = enc3 = enc4 = "";
-            } while (i < input.length);
-
-            return output;
-        },
-
-        decode: function (input) {
-            var output = "";
-            var chr1, chr2, chr3 = "";
-            var enc1, enc2, enc3, enc4 = "";
-            var i = 0;
-
-            // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
-            var base64test = /[^A-Za-z0-9\+\/\=]/g;
-            if (base64test.exec(input)) {
-                window.alert("There were invalid base64 characters in the input text.\n" +
-                    "Valid base64 characters are A-Z, a-z, 0-9, '+', '/',and '='\n" +
-                    "Expect errors in decoding.");
-            }
-            input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
-
-            do {
-                enc1 = keyStr.indexOf(input.charAt(i++));
-                enc2 = keyStr.indexOf(input.charAt(i++));
-                enc3 = keyStr.indexOf(input.charAt(i++));
-                enc4 = keyStr.indexOf(input.charAt(i++));
-
-                chr1 = (enc1 << 2) | (enc2 >> 4);
-                chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
-                chr3 = ((enc3 & 3) << 6) | enc4;
-
-                output = output + String.fromCharCode(chr1);
-
-                if (enc3 != 64) {
-                    output = output + String.fromCharCode(chr2);
-                }
-                if (enc4 != 64) {
-                    output = output + String.fromCharCode(chr3);
-                }
-
-                chr1 = chr2 = chr3 = "";
-                enc1 = enc2 = enc3 = enc4 = "";
-
-            } while (i < input.length);
-
-            return output;
-        }
-    };
-
-    /* jshint ignore:end */
 });
