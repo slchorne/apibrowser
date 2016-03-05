@@ -60,9 +60,16 @@
         </div>
 
         <!-- boolean fields 'name=true|false'-->
-        <label ng-show="fieldIsBoolean(field)">
-          true | false
-        </label>
+        <div class="col-sm-2" ng-show="fieldIsBoolean(field)">
+            <select class="form-control"
+              ng-change="generateSearchQuery()"
+              ng-model="field.fieldValue"
+                >
+              <option></option>
+              <option>true</option>
+              <option>false</option>
+            </select>
+        </div>
 
         <!--
                 ng-init="field.modCase=true"

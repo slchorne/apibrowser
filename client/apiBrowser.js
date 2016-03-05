@@ -279,7 +279,9 @@ viewApp.controller('mainController',
         };
 
         $scope.fieldIsText = function(element) {
-            return element.type.indexOf('enum') < 0 ? true : false;
+            if ( element.type.indexOf('enum') >= 0 ) { return false }
+            if ( element.type.indexOf('bool') >= 0 ) { return false }
+            return true ;
         };
         $scope.fieldIsEnum = function(element) {
             return element.type.indexOf('enum') >= 0 ? true : false;
