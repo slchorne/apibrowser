@@ -69,6 +69,7 @@ viewApp.controller('mainController',
     // create scope variables that link to the view(s)
     $scope.formFields = {};
     $scope.searchFields = {};
+    $scope.schemaLoaded = false ;
 
     // local storage could be empty
     var vls = $localStorage.getData();
@@ -217,7 +218,7 @@ viewApp.controller('mainController',
                 qv += field.modContains ? '~' : '' ;
                 qv += '=' + field.fieldValue;
                 qs.push(qv);
-                // console.log ('qv', qv);
+                // console.log ('qv', qv, field );
             }
         });
         var queryString = qs.join('&');
@@ -276,11 +277,15 @@ viewApp.controller('mainController',
             // console.log ( 'filter elem', element );
             return element.searchable_by ? true : false;
         };
-        $scope.modifierCase = function(element) {
-            return element.searchable_by.match(/:/) ? true : false;
+
+        $scope.fieldIsBoolean = function(element) {
+            return element.type.indexOf('bool') >= 0 ? true : false;
         };
         $scope.modifierContains = function(element) {
             return element.searchable_by.match(/~/) ? true : false;
+        };
+        $scope.modifierCase = function(element) {
+            return element.searchable_by.match(/:/) ? true : false;
         };
 
         // get the schema for this object and expose it to the html
@@ -291,6 +296,7 @@ viewApp.controller('mainController',
 
                 // then just expose the data to the HTML
                 // and process it there
+                $scope.schemaLoaded = true ;
                 $scope.schemaFields = response.data.fields;
 
             },function(response){
@@ -307,6 +313,7 @@ viewApp.controller('mainController',
         // console.log( 'switch to view ' , myView , ' scope:' , $scope );
         // $scope.template = "pages/home.html";
         $scope.template = myView + ".html";
+        $scope.schemaLoaded = false ;
         $scope.message = 'This is the '+ myView + ' message';
     };
     /*

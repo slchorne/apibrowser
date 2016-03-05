@@ -21,7 +21,7 @@
      example query string
 
     -->
-<div class="form-horizontal">
+<div class="form-horizontal" ng-show="schemaLoaded">
 
         <!--
             use ng-init to flip the bit on the checkbox
@@ -39,6 +39,7 @@
         <label for="search{{field.name}}"
         class="col-sm-3 control-label">{{field.name}}</label>
 
+        <!-- text fields 'name=true|false'-->
         <div class="col-sm-5">
           <input type="text" class="form-control input-sm"
               ng-change="generateSearchQuery()"
@@ -46,12 +47,20 @@
               id="search{{field.name}}" placeholder="">
         </div>
 
+        <!-- boolean fields 'name=true|false'-->
+        <label ng-show="fieldIsBoolean(field)">
+          true | false
+        </label>
+
+        <!--
+                ng-init="field.modCase=true"
+                ng-init="field.modContains=true"
+        -->
 
         <label ng-show="modifierContains(field)"
             class="checkbox-inline">
           <input type="checkbox"
                 id="search{{field.name}}ModContains"
-                ng-init="field.modContains=true"
                 ng-model="field.modContains"
                 ng-change="generateSearchQuery()"
                 >
@@ -61,7 +70,6 @@
             class="checkbox-inline">
           <input type="checkbox"
                 id="search{{field.name}}ModCase"
-                ng-init="field.modCase=true"
                 ng-model="field.modCase"
                 ng-change="generateSearchQuery()"
                 >
