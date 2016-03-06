@@ -205,7 +205,7 @@ viewApp.controller('mainController',
             .then(function(response){
                 // success
                 console.log( 'new schema' , response.data );
-                console.log( 'wapi' , wapi );
+                // console.log( 'wapi' , wapi );
 
                 // and now load this in the HTML
                 // and switch the views

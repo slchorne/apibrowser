@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.0/css/font-awesome.css" />
   <link rel="stylesheet" href="bootstrap.min.css" />
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" />
+  <link rel="stylesheet" href="libs/font-awesome/font-awesome.min.css" />
     -->
   <!-- load CSS from bootstrap and fontawesome via CDN -->
-  <link rel="stylesheet" href="bootstrap.min.css" />
-  <link rel="stylesheet" href="libs/font-awesome/font-awesome.min.css" />
+  <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.min.css" />
   <link rel="stylesheet" href="libs/json-formatter/json-formatter.css" />
 
   <style>
@@ -43,21 +43,30 @@
         <nav class="navbar navbar-default navbar-fixed-top">
         <div class="container-fluid">
             <div class="navbar-header">
-                <p class="navbar-brand navbar-left" >WAPI Browser</p>
+                <!-- don't use <p> tags -->
+                <a class="navbar-brand navbar-left" >WAPI Browser</a>
             </div>
 
-            <ul class="nav navbar-nav navbar-right">
                 <!-- no href required in this context for the <a> tag-->
-                <li><a ng-click="goTo('objects')"><i class="fa fa-bars">&nbsp;</i> Objects</a></li>
-                <li><a ng-click="goTo('settings')"><i class="fa fa-cogs">&nbsp;</i> Settings</a></li>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="" ng-click="goTo('objects')">
+                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                    Objects</a></li>
+                <li><a href="" ng-click="goTo('settings')">
+                    <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                    Settings</a></li>
             </ul>
+            <!--
+        -->
         </div>
         </nav>
     </header>
 
     <!-- MAIN CONTENT AND INJECTED VIEWS -->
 
-    <p class="alert alert-danger" ng-show="httpErrors">{{httpErrors}}</p>
+    <p class="alert alert-danger" ng-show="httpErrors">
+    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+        {{httpErrors}}</p>
     <!--
     We don't have to use views or routes, we can just use ng-show
     But, we will try using views first
