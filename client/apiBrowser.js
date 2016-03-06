@@ -33,7 +33,7 @@ var wapi = {
     url: null,
     proxy: '/wapip/',
     version: '2.0',
-    maxVersion : '2.0'
+    maxVersion : null,
 };
 
 // localstorage handlers, built as a factory
@@ -71,6 +71,9 @@ var getErrorMsg = function(response) {
 
     // and angular tries to autotransform the data, so it may or may
     // not be an object already from something that may have been json
+    if ( response.status == 401 ) {
+
+    }
 
     if ( response.data.syscall
      || response.data.data
@@ -80,6 +83,11 @@ var getErrorMsg = function(response) {
          if ( response.data.Error ) {
              msg = response.data.Error;
          }
+    }
+
+    if ( response.status == 401 ) {
+        msg = "Authorization Required: You supplied the wrong credentials (e.g., bad password)";
+
     }
 
     // anything else can be taken verbatim no need to convert
@@ -178,6 +186,7 @@ viewApp.controller('mainController',
         var vlist = data.supported_versions;
         wapi.maxVersion = vlist[vlist.length-1];
         wapi.version = wapi.maxVersion;
+        // and rebuild the URL with the new rev
         wapi.path = wapi.server + '/wapi/v' + wapi.version + '/';
         wapi.url = wapi.proxy + wapi.path ;
 
@@ -403,8 +412,9 @@ viewApp.controller('mainController',
                 $scope.checkCredentials();
 
             },function(response){
-                // error, HTTP errors
+                // change the URL type
                 console.log( 'No node server, I must be on a GM' );
+                wapi.proxy = 'https://';
                 $scope.checkCredentials();
             });
     };
