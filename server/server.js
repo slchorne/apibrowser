@@ -73,7 +73,7 @@ app.get('/wapi/localserver', function(req, res) {
 app.use('/wapip', function(req, res) {
   // beware the extra '/'
   var url = 'https:/' + req.url;
-  console.log ( 'proxy' , req.url );
+  console.log ( 'proxy' , req.method, req.originalUrl );
   var options = {
       uri: url,
       strictSSL: false
