@@ -64,6 +64,9 @@ var appOptions = {
 app.get('/', function(req, res) {
     res.sendFile('index.html');
 });
+app.get('/wapi/localserver', function(req, res) {
+    res.send('this is not a gridmaster');
+});
 
 // insert the proxy server for XSS
 // This may not work for POST/PUT...

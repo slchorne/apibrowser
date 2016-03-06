@@ -63,23 +63,27 @@ var setAuthHeader = function(authkey) {
 };
 
 var getErrorMsg = function(response) {
-    // Errors can be text, XML or json,
+    // Errors can be text, HTML, XML or json,
     // so we try and parse them as best we can
+    console.log ( 'getErrorMsg:resp',response);
+
     var msg = response.data ;
-    if ( msg.match(/DOCTYPE HTML/)) {
-        return response.status + " : " + msg ;
+
+    // and angular tries to autotransform the data, so it may or may
+    // not be an object already from something that may have been json
+
+    if ( response.data.syscall
+     || response.data.data
+     || response.data.Error ) {
+         // we are probably a clean object
+         msg = angular.toJson( response.data );
+         if ( response.data.Error ) {
+             msg = response.data.Error;
+         }
     }
 
-    // the json encoder will convert regular srings as well
-    var json = angular.toJson( response.data );
-    if ( json ) {
-        msg = json ;
-        if ( json.Error ) {
-            msg = json.Error;
-        }
-    }
-
-    console.log ( 'getErrorMsg:json', json );
+    // anything else can be taken verbatim no need to convert
+    //  if ( msg.match(/DOCTYPE HTML/)) {
 
     return response.status + " : " + msg ;
 };
@@ -98,8 +102,11 @@ viewApp.controller('mainController',
     $scope.formFields = vls ? vls : {};
     console.log ( 'load local storage', vls );
 
+    //*************
+    // MAIN CODE IS NOT HERE!!!
     // any more code has to run at the END of this controller
     // AFTER we have defined any methods that we want to use.
+    //*************
 
     //-- methods go here --
 
@@ -134,6 +141,7 @@ viewApp.controller('mainController',
     //
     $scope.getSchema = function() {
 
+        $scope.objectErrors = "Getting supported objects...";
         // generate the URL for the server
         // to avoid XSS problems we punt to ourselves, with a proxy URL
         // so we just keep the domain part of the url
@@ -193,6 +201,7 @@ viewApp.controller('mainController',
                 // and now load this in the HTML
                 // and switch the views
                 $scope.listObjects(response.data);
+                $scope.objectErrors = null ;
 
                 // $scope.$parent.goTo('objects',response.data);
                 // console.log('switched');
@@ -282,6 +291,7 @@ viewApp.controller('mainController',
         // (display only, should be redundant)
         $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
         $scope.searchErrors = null;
+        $scope.searchResults = "Searching..." ;
 
         // and punt to a search
         $scope.httpErrors = null;
@@ -378,28 +388,60 @@ viewApp.controller('mainController',
         $scope.schemaErrors = null ;
         $scope.message = 'This is the '+ myView + ' message';
     };
+
+    //
+    // detect if we are running from a local node instance
+    // or from the HTTP file distribution
+    // by going to a special URL
+    //
+    $scope.checkServerTypeAndInit = function() {
+        //
+        $http.get('/wapi/localserver')
+            .then(function(response){
+                // success
+                console.log( 'local node server' , response.data );
+                $scope.checkCredentials();
+
+            },function(response){
+                // error, HTTP errors
+                console.log( 'No node server, I must be on a GM' );
+                $scope.checkCredentials();
+            });
+    };
     /*
     */
+
+    $scope.checkCredentials = function() {
+
+        // work out which view to show
+        // by setting the template
+        if ( vls && vls.authkey ) {
+            // We have logged in before, and we can jump to the objects list
+            setAuthHeader(vls.authkey);
+            wapi.server = vls.server;
+            $scope.template = "objects.html";
+
+            console.log ( 're-use credentials', wapi);
+            $scope.getSchema();
+        }
+        else {
+            // prompt for a login
+            $scope.template = "settings.html";
+        }
+
+    };
 
     //*****************
     // MAIN code
     // Called when we first launch the controller
     //*****************
 
-    // work out which view to show
-    // by setting the template
-    if ( vls && vls.authkey ) {
-        // We have logged in before, and we can jump to the objects list
-        setAuthHeader(vls.authkey);
-        wapi.server = vls.server;
-        $scope.template = "objects.html";
+    // the FIRST thing we do is work our where we are running and
+    // thus what out URL path will be
 
-        console.log ( 're-use credentials', wapi);
-        $scope.getSchema();
-    }
-    else {
-        // prompt for a login
-        $scope.template = "settings.html";
-    }
+    $scope.checkServerTypeAndInit();
+
+    // (this will then call checkCredentials)
+
 
 });
