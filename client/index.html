@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="libs/font-awesome/font-awesome.min.css" />
     -->
   <link rel="stylesheet" href="libs/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="libs/font-awesome/css/font-awesome.css" />
   <link rel="stylesheet" href="libs/json-formatter/json-formatter.css" />
 
   <style>
@@ -51,13 +52,13 @@
                 <!-- no href required in this context for the <a> tag-->
             <ul class="nav navbar-nav navbar-right">
                 <li ng-show="template != 'objects.html'"><a href="" ng-click="goTo('objects')">
-                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                    <i class="fa fa-list"></i>
                     Objects</a></li>
-                <li><a href="" ng-click="goTo('settings')">
-                    <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+                <li ng-show="template != 'settings.html'"><a href="" ng-click="goTo('settings')">
+                    <i class="fa fa-cog"></i>
                     Settings</a></li>
                 <li ng-show="template == 'settings.html'"><a href="" ng-click="logout('settings')">
-                    <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+                    <i class="fa fa-sign-out"></i>
                     Logout</a></li>
             </ul>
             <!--

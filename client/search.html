@@ -2,6 +2,7 @@
     <h3>Search objects : {{myObject}}</h3>
     <p>{{searchUrl}}</p>
 
+    <!-- schemaErrors hide the search button, so this var is also a flag -->
     <p class="alert alert-danger" ng-show="schemaErrors">{{schemaErrors}}</p>
     <p class="alert alert-danger" ng-show="searchErrors">{{searchErrors}}</p>
 </div>
@@ -41,7 +42,7 @@
         <label for="search{{field.name}}"
         class="col-sm-3 control-label">{{field.name}}</label>
 
-        <!-- text fields 'name=true|false'-->
+        <!-- text fields -->
         <div class="col-sm-5" ng-show="fieldIsText(field)">
           <input type="text" class="form-control input-sm"
               ng-change="generateSearchQuery()"
@@ -49,6 +50,7 @@
               id="search{{field.name}}" placeholder="">
         </div>
 
+        <!-- enum type field -->
         <div class="col-sm-5" ng-show="fieldIsEnum(field)">
             <select class="form-control"
               ng-change="generateSearchQuery()"
