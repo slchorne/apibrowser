@@ -144,6 +144,16 @@ viewApp.controller('mainController',
 
     };
 
+    $scope.logout = function() {
+        $scope.formFields.name = null ;
+        vls.authkey = null ;
+        setAuthHeader(vls.authkey);
+        $localStorage.setData(vls);
+
+        // console.log('logout' , vls );
+
+    };
+
     //
     // load the schema and check the supported version
     //

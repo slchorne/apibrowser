@@ -50,12 +50,15 @@
 
                 <!-- no href required in this context for the <a> tag-->
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="" ng-click="goTo('objects')">
+                <li ng-show="template != 'objects.html'"><a href="" ng-click="goTo('objects')">
                     <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
                     Objects</a></li>
                 <li><a href="" ng-click="goTo('settings')">
-                    <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                    <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
                     Settings</a></li>
+                <li ng-show="template == 'settings.html'"><a href="" ng-click="logout('settings')">
+                    <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+                    Logout</a></li>
             </ul>
             <!--
         -->
