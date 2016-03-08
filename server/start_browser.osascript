@@ -1,0 +1,2 @@
+delay 2
+tell application "Safari" to make new document with properties {URL:"http://localhost:3000"}
