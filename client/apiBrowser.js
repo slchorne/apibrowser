@@ -58,7 +58,9 @@ viewApp.factory("$localStorage", function($window, $rootScope) {
 //
 var setAuthHeader = function(authkey) {
     var authorization = {'Authorization': 'Basic ' + authkey};
-    wapi.headers = { headers: authorization };
+    wapi.headers = {
+        withCredentials: true,
+        headers: authorization };
     return wapi.headers;
 };
 
@@ -166,7 +168,7 @@ viewApp.controller('mainController',
         wapi.url = wapi.proxy + wapi.server +
             '/wapi/v' + wapi.version + '/';
 
-        console.log( 'connect to ', wapi.url );
+        console.log( 'connect to ', wapi.url , wapi);
 
         // [ ] you have to make 1 call to get the latest version,
         // then a second call to get the schema for that version
@@ -176,7 +178,9 @@ viewApp.controller('mainController',
         // we should only have to set the headers once,
         // the cookie should do the rest
         $scope.httpErrors = null;
-        $http.get(wapi.url +'?_schema' , wapi.headers )
+        // $http({withCredentials: true})
+        $http
+            .get(wapi.url +'?_schema' , wapi.headers )
             .then(function(response){
                 // success
                 console.log( 'schema' , response.data );
@@ -279,6 +283,14 @@ viewApp.controller('mainController',
                 // console.log ('qv', qv, field );
             }
         });
+
+        // add in other fields to return
+        if ( $scope.schemaFields._also_return ) {
+            rfields.push($scope.schemaFields._also_return);
+        }
+
+        console.log ( 'also ret', $scope.schemaFields._also_return );
+
         // var rstring = '_return_fields%2B='+ rfields.join(',');
         // qs.push( rstring );
         qs.push( '_return_fields%2B='+ rfields.join(',') );
@@ -351,6 +363,11 @@ viewApp.controller('mainController',
             // check if the field exists
             // console.log ( 'filter elem', element );
             return element.searchable_by ? true : false;
+        };
+        $scope.nonsearchableFields = function(element) {
+            // check if the field exists
+            // console.log ( 'filter elem', element );
+            return element.searchable_by ? false : true;
         };
 
         $scope.fieldIsText = function(element) {

@@ -65,14 +65,14 @@
             <!--
         -->
         </div>
+    <p class="alert alert-danger" ng-show="httpErrors">
+        <i class="fa fa-exclamation-circle"></i>
+        {{httpErrors}}</p>
         </nav>
     </header>
 
     <!-- MAIN CONTENT AND INJECTED VIEWS -->
 
-    <p class="alert alert-danger" ng-show="httpErrors">
-    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-        {{httpErrors}}</p>
     <!--
     We don't have to use views or routes, we can just use ng-show
     But, we will try using views first
