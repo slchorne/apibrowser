@@ -1,32 +1,41 @@
 // script.js
 
-// create the module and name it viewApp
-// also include the router module for some later fancy stuff we aren't
-// using now
+//
+// do most stuff as a 'service' service, to keep it out of the controller
+// http://tylermcginnis.com/angularjs-factory-vs-service-vs-provider/
+// (services don't have namespace hardcoding), and instintiate copies
+//
+// ideally we want an app agnostic module
+// angular.module('jsonFormatter', ['RecursionHelper'])
 
-var viewApp = angular.module('viewApp', ['jsonFormatter']);
+// create a local storage module
+// don't pollute the global namespace
+angular.module('localStorageModule', [])
+  .service('localStorageService',function($window, $rootScope){
 
-// [ ] we can't use views, as the context scope keeps switching
-// we should try to use just show and hide
+    var keyname = 'WapiBrowser';
+    this.setData = function(val) {
+        var jval = angular.toJson(val);
+        $window.localStorage && $window.localStorage.setItem(keyname, jval);
+        return this;
+    };
+    this.getData = function() {
+        var jval = $window.localStorage && $window.localStorage.getItem(keyname);
+        return angular.fromJson(jval);
+    };
+    return this ;
 
-// create the controller and inject Angular's $scope
-// we will use this to call methods on this controller to
-// switch views
-//
-// every HTML element can really only have one controller, unless you are
-// using routes, where the context of the controller changes because the
-// URL changed. so if you aren't using routes == one controller for that
-// block.
-//
-// you also can't easily call a controller from another controler, so
-// everything for this view has a single controller
-//
-// BUT - you can pass events between controllers, and listen for them
-// function FirstController($scope) {
-//     $scope.$on('someEvent', function(event, args) {});}
-// function SecondController($scope) {
-//     $scope.$emit('someEvent', args);}
-//
+});
+
+// WAPI handlers, as a service
+// http://weblogs.asp.net/dwahlin/using-an-angularjs-factory-to-interact-with-a-restful-service
+// However, as the .then() call has to live outside the service
+// there may not be much value to the service,
+// but you could bundle the error handler getErrorMsg()
+// wapiService.get(url,successCallback);
+
+// [ ] and you can move the wapi globals and handlers out of
+// the global namespace
 
 // Global state variables
 var wapi = {
@@ -36,55 +45,6 @@ var wapi = {
     version: '2.0',
     maxVersion : null,
 };
-
-//
-// do most stuff as a 'service' service, to keep it out of the controller
-// http://tylermcginnis.com/angularjs-factory-vs-service-vs-provider/
-// (services don't have namespace hardcoding), and instintiate copies
-//
-// ideally we want an app agnostic module
-// angular.module('jsonFormatter', ['RecursionHelper'])
-
-// WAPI handlers, as a service
-// http://weblogs.asp.net/dwahlin/using-an-angularjs-factory-to-interact-with-a-restful-service
-// However, as the .then() call has to live outside the service
-// there may not be much value to the service,
-// but you can bundle the error handler getErrorMsg()
-// wapiService.get(url,successCallback);
-
-//
-// localstorage handlers, built as a service
-//
-viewApp.service("localStorageModule", function($window, $rootScope) {
-  var keyname = 'WapiBrowser';
-  this.setData = function(val) {
-      var jval = angular.toJson(val);
-      $window.localStorage && $window.localStorage.setItem(keyname, jval);
-      return this;
-  };
-  this.getData = function() {
-      var jval = $window.localStorage && $window.localStorage.getItem(keyname);
-      return angular.fromJson(jval);
-  };
-  return this ;
-});
-
-/*
-viewApp.factory("localStorageModule", function($window, $rootScope) {
-  var keyname = 'WapiBrowser';
-  return {
-    setData: function(val) {
-      var jval = angular.toJson(val);
-      $window.localStorage && $window.localStorage.setItem(keyname, jval);
-      return this;
-    },
-    getData: function() {
-      var jval = $window.localStorage && $window.localStorage.getItem(keyname);
-      return angular.fromJson(jval);
-    }
-  };
-});
-*/
 
 //
 // initial global functions, outside of $scope to
@@ -132,9 +92,35 @@ var getErrorMsg = function(response) {
     return response.status + " : " + msg ;
 };
 
+// create the module and name it viewApp
+// also include the router module for some later fancy stuff we aren't
+// using now
 
+var viewApp = angular.module('viewApp', ['localStorageModule','jsonFormatter']);
+
+// create the controller and inject Angular's $scope
+// we will use this to call methods on this controller to
+// switch views
+//
+// every HTML element can really only have one controller, unless you are
+// using routes, where the context of the controller changes because the
+// URL changed. so if you aren't using routes == one controller for that
+// block.
+//
+// you also can't easily call a controller from another controler, so
+// everything for this view has a single controller
+//
+// BUT - you can pass events between controllers, and listen for them
+// function FirstController($scope) {
+//     $scope.$on('someEvent', function(event, args) {});}
+// function SecondController($scope) {
+//     $scope.$emit('someEvent', args);}
+//
+
+
+// remember to add service deps from other modules
 viewApp.controller('mainController',
-    function($scope,$http,localStorageModule,$filter) {
+    function($scope,$http,localStorageService,$filter) {
 
     // create scope variables that link to the view(s)
     $scope.formFields = {};
@@ -142,7 +128,8 @@ viewApp.controller('mainController',
     $scope.schemaLoaded = false ;
 
     // local storage could be empty
-    var vls = localStorageModule.getData();
+    // var vls = localstorageservice.getData();
+    var vls = localStorageService.getData();
     $scope.formFields = vls ? vls : {};
     console.log ( 'load local storage', vls );
 
@@ -172,7 +159,7 @@ viewApp.controller('mainController',
         // console.log ( 'header', wapi.headers);
         // console.log( 'save user', cred );
 
-        localStorageModule.setData(cred);
+        localStorageService.setData(cred);
         wapi.server = $scope.formFields.server;
 
         // now we can load the schema
@@ -184,7 +171,7 @@ viewApp.controller('mainController',
         $scope.formFields.name = null ;
         vls.authkey = null ;
         setAuthHeader(vls.authkey);
-        localStorageModule.setData(vls);
+        localStorageService.setData(vls);
 
         // console.log('logout' , vls );
 
