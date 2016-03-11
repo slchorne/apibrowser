@@ -3,6 +3,7 @@
 // create the module and name it viewApp
 // also include the router module for some later fancy stuff we aren't
 // using now
+
 var viewApp = angular.module('viewApp', ['jsonFormatter']);
 
 // [ ] we can't use views, as the context scope keeps switching
@@ -36,17 +37,40 @@ var wapi = {
     maxVersion : null,
 };
 
-// [ ] in fact do most stuff as a factory, to keep it out of the controller
+//
+// do most stuff as a 'service' service, to keep it out of the controller
 // http://tylermcginnis.com/angularjs-factory-vs-service-vs-provider/
-// localstorage handlers, built as a factory
+// (services don't have namespace hardcoding), and instintiate copies
+//
+// ideally we want an app agnostic module
+// angular.module('jsonFormatter', ['RecursionHelper'])
+
 // WAPI handlers, as a service
-// (services don't have namespace hardcoding)
 // http://weblogs.asp.net/dwahlin/using-an-angularjs-factory-to-interact-with-a-restful-service
 // However, as the .then() call has to live outside the service
 // there may not be much value to the service,
 // but you can bundle the error handler getErrorMsg()
+// wapiService.get(url,successCallback);
 
-viewApp.factory("$localStorage", function($window, $rootScope) {
+//
+// localstorage handlers, built as a service
+//
+viewApp.service("localStorageModule", function($window, $rootScope) {
+  var keyname = 'WapiBrowser';
+  this.setData = function(val) {
+      var jval = angular.toJson(val);
+      $window.localStorage && $window.localStorage.setItem(keyname, jval);
+      return this;
+  };
+  this.getData = function() {
+      var jval = $window.localStorage && $window.localStorage.getItem(keyname);
+      return angular.fromJson(jval);
+  };
+  return this ;
+});
+
+/*
+viewApp.factory("localStorageModule", function($window, $rootScope) {
   var keyname = 'WapiBrowser';
   return {
     setData: function(val) {
@@ -60,6 +84,7 @@ viewApp.factory("$localStorage", function($window, $rootScope) {
     }
   };
 });
+*/
 
 //
 // initial global functions, outside of $scope to
@@ -109,7 +134,7 @@ var getErrorMsg = function(response) {
 
 
 viewApp.controller('mainController',
-    function($scope,$http,$localStorage,$filter) {
+    function($scope,$http,localStorageModule,$filter) {
 
     // create scope variables that link to the view(s)
     $scope.formFields = {};
@@ -117,7 +142,7 @@ viewApp.controller('mainController',
     $scope.schemaLoaded = false ;
 
     // local storage could be empty
-    var vls = $localStorage.getData();
+    var vls = localStorageModule.getData();
     $scope.formFields = vls ? vls : {};
     console.log ( 'load local storage', vls );
 
@@ -147,7 +172,7 @@ viewApp.controller('mainController',
         // console.log ( 'header', wapi.headers);
         // console.log( 'save user', cred );
 
-        $localStorage.setData(cred);
+        localStorageModule.setData(cred);
         wapi.server = $scope.formFields.server;
 
         // now we can load the schema
@@ -159,7 +184,7 @@ viewApp.controller('mainController',
         $scope.formFields.name = null ;
         vls.authkey = null ;
         setAuthHeader(vls.authkey);
-        $localStorage.setData(vls);
+        localStorageModule.setData(vls);
 
         // console.log('logout' , vls );
 
@@ -192,7 +217,7 @@ viewApp.controller('mainController',
             .get(wapi.url +'?_schema' , wapi.headers )
             .then(function(response){
                 // success
-                console.log( 'schema' , response.data );
+                // console.log( 'schema' , response.data );
 
                 // punt to check the API version
                 $scope.checkApiVersion(response.data);
@@ -208,12 +233,15 @@ viewApp.controller('mainController',
     $scope.checkApiVersion = function(data) {
         var vlist = data.supported_versions;
         wapi.maxVersion = vlist[vlist.length-1];
+
+        console.log ( 'max rev '+ wapi.version+ ' -> '+ wapi.maxVersion );
+
         wapi.version = wapi.maxVersion;
         // and rebuild the URL with the new rev
         wapi.path = wapi.server + '/wapi/v' + wapi.version + '/';
         wapi.url = wapi.proxy + wapi.path ;
 
-        console.log ( 'max rev', wapi);
+        // console.log ( 'max rev', wapi);
         // then re-load the schema
         $scope.getLatestSchema();
     };
@@ -297,8 +325,6 @@ viewApp.controller('mainController',
         if ( $scope.schemaFields._also_return ) {
             rfields.push($scope.schemaFields._also_return);
         }
-
-        console.log ( 'also ret', $scope.schemaFields._also_return );
 
         // var rstring = '_return_fields%2B='+ rfields.join(',');
         // qs.push( rstring );
