@@ -43,7 +43,7 @@
         class="col-sm-3 control-label">{{field.name}}</label>
 
         <!-- text fields -->
-        <div class="col-sm-5" ng-show="fieldIsText(field)">
+        <div class="col-sm-5" ng-if="fieldIsText(field)">
           <input type="text" class="form-control input-sm"
               ng-change="generateSearchQuery()"
               ng-model="field.fieldValue"
@@ -51,7 +51,7 @@
         </div>
 
         <!-- enum type field -->
-        <div class="col-sm-5" ng-show="fieldIsEnum(field)">
+        <div class="col-sm-5" ng-if="fieldIsEnum(field)">
             <select class="form-control"
               ng-change="generateSearchQuery()"
               ng-model="field.fieldValue"
@@ -63,7 +63,7 @@
         </div>
 
         <!-- boolean fields 'name=true|false'-->
-        <div class="col-sm-2" ng-show="fieldIsBoolean(field)">
+        <div class="col-sm-2" ng-if="fieldIsBoolean(field)">
             <select class="form-control"
               ng-change="generateSearchQuery()"
               ng-model="field.fieldValue"
@@ -79,7 +79,7 @@
                 ng-init="field.modContains=true"
         -->
 
-        <label ng-show="modifierContains(field)"
+        <label ng-if="modifierContains(field)"
             class="checkbox-inline">
           <input type="checkbox"
                 id="search{{field.name}}ModContains"
@@ -88,7 +88,7 @@
                 >
           contains
         </label>
-        <label ng-show="modifierCase(field)"
+        <label ng-if="modifierCase(field)"
             class="checkbox-inline">
           <input type="checkbox"
                 id="search{{field.name}}ModCase"

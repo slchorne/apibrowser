@@ -36,7 +36,16 @@ var wapi = {
     maxVersion : null,
 };
 
+// [ ] in fact do most stuff as a factory, to keep it out of the controller
+// http://tylermcginnis.com/angularjs-factory-vs-service-vs-provider/
 // localstorage handlers, built as a factory
+// WAPI handlers, as a service
+// (services don't have namespace hardcoding)
+// http://weblogs.asp.net/dwahlin/using-an-angularjs-factory-to-interact-with-a-restful-service
+// However, as the .then() call has to live outside the service
+// there may not be much value to the service,
+// but you can bundle the error handler getErrorMsg()
+
 viewApp.factory("$localStorage", function($window, $rootScope) {
   var keyname = 'WapiBrowser';
   return {
