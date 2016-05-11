@@ -54,12 +54,18 @@ angular.module('wapiModule', [])
             return me.getConfig().url ;
         };
 
+        //
+        // return just the path part of the URL
+        //
         this.getPath = function() {
             var conf = me.getConfig();
             return conf.server +
                 '/wapi/v' + conf.version + '/';
         };
 
+        //
+        // return the base64 Authorization string
+        //
         this.getAuthKey = function() {
             console.log ( 'ak' , me.getConfig() );
             return me.getConfig().authkey ;
@@ -67,6 +73,7 @@ angular.module('wapiModule', [])
 
         //
         // change the proxy, which changes the URL
+        //
         this.setProxy = function(proxy) {
             var conf = me.getConfig();
             conf.proxy = proxy;
@@ -126,6 +133,7 @@ angular.module('wapiModule', [])
             };
 
             // console.log ('session', conf , args );
+            return this ;
         };
 
         //
@@ -136,11 +144,14 @@ angular.module('wapiModule', [])
             me.session({
                 server : conf.server
             });
+            return this ;
         };
 
-        // [ ] wrapped $http handlers
-        // just append the path (and ? queryString ) to the config items
+        //
+        // $http handlers...
+        // build a call from the config and the path
         // return the $promise so we can use '.then()'
+        //
         this.get = function( path ) {
             var conf = me.getConfig();
             return $http.get(conf.url + path , conf.httpConfig );

@@ -291,6 +291,7 @@ viewApp.controller('mainController',
 
         // define some filters for listing the schema
             // return element.name.match(/=/) ? true : false;
+
         $scope.searchableFields = function(element) {
             // check if the field exists
             // console.log ( 'filter elem', element );
@@ -324,6 +325,7 @@ viewApp.controller('mainController',
         // NOW, make a call to get the schema so we can build the form
         // get the schema for this object and expose it to the html
         $scope.httpErrors = null;
+
         wapi.get( myObj + '?_schema' )
             .then(function(response){
                 // success
