@@ -6,7 +6,7 @@ here](http://www.infoblox.com.foo/ba/) and
 really are worth the read. This is just a set of quick pointers to get you
 up to speed
 
-## WAPI, PAPI, RESTful, what's the difference. ?
+## WAPI, PAPI, RESTful, what's the difference?
 
 NIOS has 2 APIs. There is the legacy perl based API, also known as the
 PAIP (for Perl API), and there is the newer RESTful API, known as the
@@ -24,14 +24,18 @@ Now, in the browser, type in the following url:
 You should get prompted to ask for your username and password (again)
 and then get output that looks something like this:
 
-    <xml>
-    </xml>
+    <?xml version="1.0"?>
+    <list>
+        <value type="object">
+            <_ref>grid/b25lLmNsdXN0ZXIkMA:demogm1</_ref>
+        </value>
+    </list>
 
 ## XML or JSON
 
 Ok, so you got back a pile of XML gumpf, that's fine if you like XML,
 but there are a lot of examples that seems to reference JSON output, how
-do you get that? 
+do you get that?
 
 Well the WAPI can return either XML or JSON output.  The default is XML,
 and you have to ask for JSON specifically.  Lets change the that last url
@@ -41,8 +45,11 @@ so it now looks like this:
 
 You should now get something that looks like this :
 
-    {
-    }
+    [
+        {
+            "_ref": "grid/b25lLmNsdXN0ZXIkMA:mygm"
+        }
+    ]
 
 But that's it, you're done, go take break, you now know the fundamentals
 of making a query using the WAPI.
@@ -52,7 +59,7 @@ in the request header:
 
     Content-Type: application/json
 
-## Authentication 
+## Authentication
 
 You may have noticed that when you did that second request, you weren't
 asked to authenticate (unless you killed you browser or did something equally
@@ -73,12 +80,12 @@ security.
 
 Or, you can pass the authentication in a header :
 
-    Authorization : 'Basic ((myauthkey))
+    Authorization : "Basic ((myauthkey))"
 
 The Authorisation key is a base64 encoding of the string
 'username:password' (note that the  ':' is part of the string)
 
-lastly, if you have a client that can manage cookies, you can send the IBAPAUTH
+lastly, if you have a client that can manage cookies, you can send the **IBAPAUTH**
 cookie in lieu of any authentication data.
 
 ## Nomenclature
@@ -92,7 +99,7 @@ their absolute path. E.g:
 ## Versions
 
 You should also take note of how version strings work. The version string
-is a developer tool, and not (strictly speaking) a server requirement. 
+is a developer tool, and not (strictly speaking) a server requirement.
 
 A current WAPI version is backward compatible with WAPI releases that have
 the same WAPI version or with all earlier versions.  Though the protocol
@@ -105,17 +112,15 @@ even if it talks to a server that supports version 1.5.
 Newer versions of the WAPI will have new features, so when you specify
 the version in the url you are saying
 
-    I expect to make calls that use the features defined in this version
-of the API
+    I expect to make calls that use the features defined in this version of the API
 
 If the server doesn't support the version you are asking for you will get
 an error:
 
-    {
-    }
+    Version 2.4 not supported
 
 Thus, you do not have to bump the version number in the URL if you
-upgrade your grid. 
+upgrade your grid.
 
 ## GET/POST/PUT etc
 
@@ -160,7 +165,7 @@ Now, to keep you entertained, type in the following url :
 Query String parameters
 
 These are REALLY IMPORTANT. Seriously. If you're using a WAPI call that
-doesn't have query string params you're doing it wrong. 
+doesn't have query string params you're doing it wrong.
 
 Go ahead and type in the following url
 
@@ -173,14 +178,16 @@ After some period of time you will either get a very long list of data or
 an error message that looks a lot like this:
 
     {
-        exceeds 1000 objects
+        "Error": "AdmConProtoError: Result set too large (> 1000)",
+        "code": "Client.Ibap.Proto",
+        "text": "Result set too large (> 1000)"
     }
 
-'''NEVER EVER DO THAT again'''
+> **NEVER EVER DO THAT AGAIN**
 
 The WAPI (and all the NIOS apis) are NOT designed for bulk data export,
 they are designed for automation, they work a lot better and faster when
-you do specific atomic actions on a specific object. 
+you do specific atomic actions on a specific object.
 
 You control all this with the query string params, they are a set of
 controls that affect your operations and are not (mostly) specific to the
@@ -214,20 +221,20 @@ the '%2B' is just an encoding of the '+' character, YMMV.
 
 ### Essentially there are 3 kinds of query string variables.
 
-Query string 'Arguments' 
+Query string 'Arguments'
     Are used to specify general options or method
 specific options and data for the request. All options start with the
-character _ (underscore) :
+character '_' (underscore) :
 
     /wapi/v1.2/record:host?_return_fields+=comment&name~=infoblox
 
-Query string 'functions' 
+Query string 'functions'
     Are associated with particular objects, only work with POST methods
 and usually return calculated values :
 
     /network/ZG5zLm5ldHdvcmskMTA==?_function=next_available_ip&num=3
 
-Query string 'parameters' 
+Query string 'parameters'
     Are almost always modifiers on a query to narrow the search:
 
     /wapi/v1.2/record:host?name=infoblox
@@ -237,17 +244,17 @@ Query string 'parameters'
 All GET requests (searches) will return an ARRAY of objects, even if there is
 an exact match. So you will always get something that look like this:
 
-  [
-    {
-        "_ref": "network/ZG5zLm5ldHdvcmskMTAuMS4wLjAvMTYvMA:10.1.0.0%2F16",
-        "network": "10.1.0.0/16",
-    }
-  ]
+    [
+        {
+            "_ref": "network/ZG5zLm5ldHdvcmskMTAuMS4wLjAvMTYvMA:10.1.0.0%2F16",
+            "network": "10.1.0.0/16",
+        }
+        ]
 
 If you search didn't match any results you will NOT get an error, you will
 just get an empty array:
 
-  [ ]
+    [ ]
 
 When you are doing searches you need to add query strings to make your
 search as specific as possible. Every object only supports a subset of
@@ -287,7 +294,7 @@ combined in any order (E.g : 'name:~')
 
 Extensible attributes have a slightly funkier syntax because the name of the EA
 is variable and it could collide with existing field names. As such any EA is
-prefixed with the '\*' character. 
+prefixed with the '\*' character.
 
 So to search for all networks where the EA 'Site' is set to 'Nevada' we
 would do the following:
@@ -301,23 +308,23 @@ Or even this
 ## UIDs and refs
 
 By now you should have a handle on how to perform reads to the database, what about
-updates? 
+updates?
 
 To modify an object we need to know it's unique id, this is
 always returned with every object and is in the \_ref field :
 
-  [
-    {
-        "_ref": "network/ZG5zLm5ldHdvcmskMTAuMS4wLjAvMTYvMA:10.1.0.0%2F16",
-        "network": "10.1.0.0/16",
-        "network_view": "default"
-    },
-    {
-        "_ref": "network/ZG5zLm5ldHdvcmskMTAuMi4wLjAvMTYvMA:10.2.0.0%2F16",
-        "network": "10.2.0.0/16",
-        "network_view": "default"
-    }
-  ]
+    [
+        {
+            "_ref": "network/ZG5zLm5ldHdvcmskMTAuMS4wLjAvMTYvMA:10.1.0.0%2F16",
+            "network": "10.1.0.0/16",
+            "network_view": "default"
+        },
+        {
+            "_ref": "network/ZG5zLm5ldHdvcmskMTAuMi4wLjAvMTYvMA:10.2.0.0%2F16",
+            "network": "10.2.0.0/16",
+            "network_view": "default"
+        }
+    ]
 
 The \_ref is a relative url so in the above example you could get the object
 directly with the url:
@@ -335,13 +342,13 @@ and the \_ref may change over time (So don't try and cache it offline).
 
 Thus if you want to modify an object, you must first get its \_ref
 
-    Never make a PUT without first doing a GET
+> **Never make a PUT without first doing a GET**
 
 This is just good database practice.
 
 ## Modifying an object
 
-To edit an object, send a PUT request to the url of the \_ref. 
+To edit an object, send a PUT request to the url of the \_ref.
 
 You cannot send a PUT using a standard browser, you going to need a client that
 lets you control and send other HTTP methods. E.g:
@@ -416,18 +423,23 @@ object no longer exists)
 If you ever get an error you will get back an HTTP error code, and RECORD
 instead of an ARRAY:
 
-{ 
-  "Error": "AdmConProtoError: Unknown argument/field: netwdork",
-  "code": "Client.Ibap.Proto",
-  "text": "Unknown argument/field: netwdork",
-  "trace": "  File "/infoblox/common/lib/python/info..."
-}
+    {
+      "Error": "AdmConProtoError: Unknown argument/field: netwdork",
+      "code": "Client.Ibap.Proto",
+      "text": "Unknown argument/field: netwdork",
+      "trace": "  File "/infoblox/common/lib/python/info..."
+    }
 
 And if you had a low level HTTP error, you won't even get JSON (even if you
 asked for it) you may get a server level error message or an XML dump
 
-    <html>
-    </html>
+    <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+    <html><head>
+    <title>404 Not Found</title>
+    </head><body>
+    <h1>Not Found</h1>
+    <p>The requested URL /pwapii/v1.2/record:host was not found on this server.</p>
+    </body></html>
 
 But, When the server returns an error with status code \>= 400, the body is
 always in JSON format, irrespective of any Accept or \_return\_types.
@@ -456,4 +468,3 @@ and an error message.
 
 It is worth reading the API docs section on 'Error Handling' to get a full
 understanding of this.
-
