@@ -27,7 +27,7 @@ and then get output that looks something like this:
     <?xml version="1.0"?>
     <list>
         <value type="object">
-            <_ref>grid/b25lLmNsdXN0ZXIkMA:demogm1</_ref>
+            <_ref>grid/b25lLmNsdXN0ZXIkMA:mygm</_ref>
         </value>
     </list>
 
@@ -63,12 +63,13 @@ in the request header:
 
 You may have noticed that when you did that second request, you weren't
 asked to authenticate (unless you killed you browser or did something equally
-drastic). The WAPI uses <<basic authentication>> for all requests, and
+drastic). The WAPI uses
+[basic authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) for all requests, and
 once you've entered your credentials, the server will set a cookie that
 the browser can re-use for all following requests.
 
 This is fine for ~60% of the time, but that login prompt can get annoying
-at times, so there are 2 other ways to authenticate a user, which are all
+at times, so there are two other ways to authenticate a user, which are all
 part of the 'Basic' authentication spec.
 
 You can pass the username and password in the URL:
@@ -112,7 +113,7 @@ even if it talks to a server that supports version 1.5.
 Newer versions of the WAPI will have new features, so when you specify
 the version in the url you are saying
 
-    I expect to make calls that use the features defined in this version of the API
+    "I expect to make calls that use the features defined in this version of the API"
 
 If the server doesn't support the version you are asking for you will get
 an error:
@@ -147,7 +148,7 @@ Oriented database, so there aren't any rows.  They are more like nodes in
 a very large hierarchy.  
 
 So to keep things sane for everyone they are referred to simply as
-objects, (and types).
+**objects**, (and types).
 
 When you want to work on something in the database you specify the
 object type with the url and any parameters are either sent in the query
@@ -160,11 +161,11 @@ string or in the body of the message. E.g:
 
 Now, to keep you entertained, type in the following url :
 
-    /wapi/v2.0/member
+    /wapi/v2.0/member?_return_type=json-pretty
 
-Query String parameters
+## Query String parameters
 
-These are REALLY IMPORTANT. Seriously. If you're using a WAPI call that
+These are **REALLY IMPORTANT**. Seriously. If you're using a WAPI call that
 doesn't have query string params you're doing it wrong.
 
 Go ahead and type in the following url
@@ -173,7 +174,7 @@ Go ahead and type in the following url
 
 Now go grab some tea or coffee or lunch because this could take a while.
 
-What you've just done is asked for ALL THE HOST RECORDS IN the database.
+What you've just done is asked for ALL THE HOST RECORDS in the database.
 After some period of time you will either get a very long list of data or
 an error message that looks a lot like this:
 
@@ -214,7 +215,7 @@ examples:
 
 Type in the following url to your browser window
 
-    /wapi/v1.2/member?_return_fields%2B=comment,extattrs&master_candidate=true
+    /wapi/v1.2/v2.3/member?_return_type=json-pretty&_return_fields%2B=comment,extattrs&platform=INFOBLOX
 
 Query strings must be URL encoded if you are typing things into a browser, so
 the '%2B' is just an encoding of the '+' character, YMMV.
@@ -249,7 +250,7 @@ an exact match. So you will always get something that look like this:
             "_ref": "network/ZG5zLm5ldHdvcmskMTAuMS4wLjAvMTYvMA:10.1.0.0%2F16",
             "network": "10.1.0.0/16",
         }
-        ]
+    ]
 
 If you search didn't match any results you will NOT get an error, you will
 just get an empty array:
