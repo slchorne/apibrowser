@@ -1,12 +1,11 @@
 // script.js
 
 // create the module and name it viewApp
-// also include the router module for some later fancy stuff we aren't
-// using now
-var viewApp = angular.module('viewApp', ['jsonFormatter']);
+// also include the other modules we will need
 
-// [ ] we can't use views, as the context scope keeps switching
-// we should try to use just show and hide
+var viewApp = angular.module('viewApp', [
+    'wapiModule',
+    'localStorageModule','jsonFormatter']);
 
 // create the controller and inject Angular's $scope
 // we will use this to call methods on this controller to
@@ -27,86 +26,23 @@ var viewApp = angular.module('viewApp', ['jsonFormatter']);
 //     $scope.$emit('someEvent', args);}
 //
 
-// Global state variables
-var wapi = {
-    server: null,
-    url: null,
-    proxy: '/wapip/',
-    version: '2.0',
-    maxVersion : null,
-};
 
-// localstorage handlers, built as a factory
-viewApp.factory("$localStorage", function($window, $rootScope) {
-  var keyname = 'WapiBrowser';
-  return {
-    setData: function(val) {
-      var jval = angular.toJson(val);
-      $window.localStorage && $window.localStorage.setItem(keyname, jval);
-      return this;
-    },
-    getData: function() {
-      var jval = $window.localStorage && $window.localStorage.getItem(keyname);
-      return angular.fromJson(jval);
-    }
-  };
-});
-
-//
-// initial global functions, outside of $scope to
-// avoid race conditions with the parser
-//
-var setAuthHeader = function(authkey) {
-    var authorization = {'Authorization': 'Basic ' + authkey};
-    wapi.headers = { headers: authorization };
-    return wapi.headers;
-};
-
-var getErrorMsg = function(response) {
-    // Errors can be text, HTML, XML or json,
-    // so we try and parse them as best we can
-    console.log ( 'getErrorMsg:resp',response);
-
-    var msg = response.data ;
-
-    // and angular tries to autotransform the data, so it may or may
-    // not be an object already from something that may have been json
-    if ( response.status == 401 ) {
-
-    }
-
-    if ( response.data.syscall
-     || response.data.data
-     || response.data.Error ) {
-         // we are probably a clean object
-         msg = angular.toJson( response.data );
-         if ( response.data.Error ) {
-             msg = response.data.Error;
-         }
-    }
-
-    if ( response.status == 401 ) {
-        msg = "Authorization Required: You supplied the wrong credentials (e.g., bad password)";
-
-    }
-
-    // anything else can be taken verbatim no need to convert
-    //  if ( msg.match(/DOCTYPE HTML/)) {
-
-    return response.status + " : " + msg ;
-};
-
-
+// remember to add service deps from other modules
 viewApp.controller('mainController',
-    function($scope,$http,$localStorage,$filter) {
+    function($scope,$http,wapi,localStorageService,$filter) {
 
     // create scope variables that link to the view(s)
     $scope.formFields = {};
     $scope.searchFields = {};
     $scope.schemaLoaded = false ;
 
+
+    // object to hols the local storage settings.
+    // set here as a global, so that other methods can see it
+    //
     // local storage could be empty
-    var vls = $localStorage.getData();
+    // var vls = localstorageservice.getData();
+    var vls = localStorageService.getData();
     $scope.formFields = vls ? vls : {};
     console.log ( 'load local storage', vls );
 
@@ -126,18 +62,15 @@ viewApp.controller('mainController',
         // create a copy of the fields so we can massage the data,
         var cred = angular.copy($scope.formFields);
 
-        // create the basic auth
-        var credentials = btoa( cred.name + ':' + cred.password );
-        setAuthHeader(credentials);
+        // set up the wapi
+        wapi.session( cred );
 
         // cleanse the password and store the keys
         delete cred.password;
-        cred.authkey = credentials ;
-        // console.log ( 'header', wapi.headers);
-        // console.log( 'save user', cred );
+        cred.authkey = wapi.getAuthKey();
+        localStorageService.setData(cred);
 
-        $localStorage.setData(cred);
-        wapi.server = $scope.formFields.server;
+        // console.log( 'save user', cred );
 
         // now we can load the schema
         $scope.getSchema();
@@ -145,12 +78,14 @@ viewApp.controller('mainController',
     };
 
     $scope.logout = function() {
+        wapi.logout();
+
+        // and reset the local vars
         $scope.formFields.name = null ;
         vls.authkey = null ;
-        setAuthHeader(vls.authkey);
-        $localStorage.setData(vls);
+        localStorageService.setData(vls);
 
-        // console.log('logout' , vls );
+        // console.log('logout', wapi.getConfig());
 
     };
 
@@ -159,27 +94,30 @@ viewApp.controller('mainController',
     //
     $scope.getSchema = function() {
 
-        $scope.objectErrors = "Getting supported objects...";
         // generate the URL for the server
         // to avoid XSS problems we punt to ourselves, with a proxy URL
         // so we just keep the domain part of the url
-        wapi.url = wapi.proxy + wapi.server +
-            '/wapi/v' + wapi.version + '/';
+        // wapi.url = wapi.proxy + wapi.server +
+        //     '/wapi/v' + wapi.version + '/';
 
-        console.log( 'connect to ', wapi.url );
+        console.log( 'get schema', wapi.getUrl() );
 
-        // [ ] you have to make 1 call to get the latest version,
+        // you have to make 1 call to get the latest version,
         // then a second call to get the schema for that version
         // as the schema returns version specific data
 
         // then make a request to get the schema
         // we should only have to set the headers once,
         // the cookie should do the rest
+
         $scope.httpErrors = null;
-        $http.get(wapi.url +'?_schema' , wapi.headers )
+        $scope.objectErrors = "Getting supported objects...";
+
+        // $http.get(wapi.url +'?_schema' , wapi.headers )
+        wapi.get('?_schema')
             .then(function(response){
                 // success
-                console.log( 'schema' , response.data );
+                // console.log( 'schema' , response.data );
 
                 // punt to check the API version
                 $scope.checkApiVersion(response.data);
@@ -187,20 +125,21 @@ viewApp.controller('mainController',
             },function(response){
                 // error, HTTP errors
                 // console.log( 'HTTP error' );
-                $scope.httpErrors = getErrorMsg( response );
+                $scope.httpErrors = wapi.getErrorMsg( response );
             });
 
     };
 
+    //
+    // now that we've loaded an initial schema, we need to
+    // see if out version numbers are out of date
+    //
     $scope.checkApiVersion = function(data) {
         var vlist = data.supported_versions;
-        wapi.maxVersion = vlist[vlist.length-1];
-        wapi.version = wapi.maxVersion;
-        // and rebuild the URL with the new rev
-        wapi.path = wapi.server + '/wapi/v' + wapi.version + '/';
-        wapi.url = wapi.proxy + wapi.path ;
 
-        console.log ( 'max rev', wapi);
+        var maxRev = vlist[vlist.length-1];
+        wapi.setVersion(maxRev);
+
         // then re-load the schema
         $scope.getLatestSchema();
     };
@@ -210,12 +149,10 @@ viewApp.controller('mainController',
         // load the correct schema
 
         $scope.httpErrors = null;
-        $http.get(wapi.url +'?_schema' , wapi.headers )
-        // $http.get(wapi.url +'?_schema' )
+        wapi.get('?_schema')
             .then(function(response){
                 // success
                 console.log( 'new schema' , response.data );
-                // console.log( 'wapi' , wapi );
 
                 // and now load this in the HTML
                 // and switch the views
@@ -228,7 +165,7 @@ viewApp.controller('mainController',
             },function(response){
                 // error, HTTP errors
                 console.log( 'HTTP error' );
-                $scope.httpErrors = getErrorMsg( response );
+                $scope.httpErrors = wapi.getErrorMsg( response );
             });
 
     };
@@ -254,7 +191,7 @@ viewApp.controller('mainController',
         // console.log('field change',el);
 
         // the html will add a new field to the schema 'fieldValue'
-        // and some modifier flags
+        // via ngModel, and some modifier flags
         // which we can use to extract the values and form a query string
 
         // We have to process each name value pair and build up a query string
@@ -279,6 +216,12 @@ viewApp.controller('mainController',
                 // console.log ('qv', qv, field );
             }
         });
+
+        // add in other fields to return
+        if ( $scope.schemaFields._also_return ) {
+            rfields.push($scope.schemaFields._also_return);
+        }
+
         // var rstring = '_return_fields%2B='+ rfields.join(',');
         // qs.push( rstring );
         qs.push( '_return_fields%2B='+ rfields.join(',') );
@@ -289,10 +232,10 @@ viewApp.controller('mainController',
         var queryString = qs.join('&');
 
         // reset the search url
-        // $scope.searchUrl = wapi.url + $scope.myObject + '?' + queryString ;
         var searchPath = $scope.myObject + '?' + queryString;
-        // (display only)
-        $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
+
+        // (and for display only)
+        $scope.searchUrl = 'https://'+ wapi.getPath() + searchPath ;
 
         return searchPath ;
 
@@ -308,16 +251,17 @@ viewApp.controller('mainController',
 
         var searchPath = $scope.generateSearchQuery();
         // (display only, should be redundant)
-        $scope.searchUrl = 'https://'+ wapi.path + searchPath ;
+        $scope.searchUrl = 'https://'+ wapi.getPath() + searchPath ;
         $scope.searchErrors = null;
         $scope.searchResults = "Searching..." ;
 
         // and punt to a search
         $scope.httpErrors = null;
-        $http.get( wapi.url + searchPath , wapi.headers )
+        // $http.get( wapi.url + searchPath , wapi.headers )
+        wapi.get( searchPath )
             .then(function(response){
                 // success
-                console.log( 'object search ' , response.data );
+                // console.log( 'object search ' , response.data );
 
                 // then just expose the data to the HTML
                 // and process it there
@@ -341,16 +285,22 @@ viewApp.controller('mainController',
         console.log( 'switch to search ' , myObj );
         $scope.myObject = myObj;
         $scope.template = "search.html";
-        $scope.searchUrl = 'https://'+ wapi.path + myObj ;
+        $scope.searchUrl = 'https://'+ wapi.getPath() + myObj ;
         $scope.searchResults = null ;
         $scope.searchErrors = null;
 
         // define some filters for listing the schema
             // return element.name.match(/=/) ? true : false;
+
         $scope.searchableFields = function(element) {
             // check if the field exists
             // console.log ( 'filter elem', element );
             return element.searchable_by ? true : false;
+        };
+        $scope.nonsearchableFields = function(element) {
+            // check if the field exists
+            // console.log ( 'filter elem', element );
+            return element.searchable_by ? false : true;
         };
 
         $scope.fieldIsText = function(element) {
@@ -371,9 +321,12 @@ viewApp.controller('mainController',
             return element.searchable_by.match(/:/) ? true : false;
         };
 
+        // ---
+        // NOW, make a call to get the schema so we can build the form
         // get the schema for this object and expose it to the html
         $scope.httpErrors = null;
-        $http.get(wapi.url + myObj + '?_schema' , wapi.headers)
+
+        wapi.get( myObj + '?_schema' )
             .then(function(response){
                 // success
                 console.log( 'object schema' , response.data );
@@ -391,7 +344,7 @@ viewApp.controller('mainController',
             },function(response){
                 // error, HTTP errors
                 console.log( 'HTTP error' );
-                $scope.httpErrors = getErrorMsg( response );
+                $scope.httpErrors = wapi.getErrorMsg( response );
             });
 
     };
@@ -424,24 +377,28 @@ viewApp.controller('mainController',
             },function(response){
                 // change the URL type
                 console.log( 'No node server, I must be on a GM' );
-                wapi.proxy = 'https://';
+                wapi.setProxy('https://');
                 $scope.checkCredentials();
             });
     };
     /*
     */
 
+    //
+    // then see if we have cached credentuals in local storage
+    //
     $scope.checkCredentials = function() {
 
         // work out which view to show
         // by setting the template
         if ( vls && vls.authkey ) {
-            // We have logged in before, and we can jump to the objects list
-            setAuthHeader(vls.authkey);
-            wapi.server = vls.server;
+            console.log ( 're-use credentials', vls);
+
+            // set up the wapi
+            wapi.session( vls );
+
             $scope.template = "objects.html";
 
-            console.log ( 're-use credentials', wapi);
             $scope.getSchema();
         }
         else {

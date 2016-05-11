@@ -27,6 +27,8 @@
   -->
   <script src="libs/angular/angular.js"></script>
   <script src="libs/json-formatter/json-formatter.js"></script>
+  <script src="localStorage.js"></script>
+  <script src="bloxWapi.js"></script>
   <!--
   <script src="angular-route.js"></script>
   -->
@@ -71,11 +73,12 @@
     <!-- MAIN CONTENT AND INJECTED VIEWS -->
 
     <p class="alert alert-danger" ng-show="httpErrors">
-    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+        <i class="fa fa-exclamation-circle"></i>
         {{httpErrors}}</p>
+
     <!--
     We don't have to use views or routes, we can just use ng-show
-    But, we will try using views first
+    But, views let us break up the files using ng-include
     -->
     <div id="main" ng-include="template">
 
