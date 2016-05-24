@@ -41,10 +41,10 @@ viewApp.controller('mainController',
     // set here as a global, so that other methods can see it
     //
     // local storage could be empty
-    // var vls = localstorageservice.getData();
-    var vls = localStorageService.getData();
-    $scope.formFields = vls ? vls : {};
-    console.log ( 'load local storage', vls );
+    // var localSettings = localstorageservice.getData();
+    var localSettings = localStorageService.getData();
+    $scope.formFields = localSettings ? localSettings : {};
+    console.log ( 'load local storage', localSettings );
 
     //*************
     // MAIN CODE IS NOT HERE!!!
@@ -82,8 +82,8 @@ viewApp.controller('mainController',
 
         // and reset the local vars
         $scope.formFields.name = null ;
-        vls.authkey = null ;
-        localStorageService.setData(vls);
+        localSettings.authkey = null ;
+        localStorageService.setData(localSettings);
 
         // console.log('logout', wapi.getConfig());
 
@@ -378,7 +378,20 @@ viewApp.controller('mainController',
                 // change the URL type
                 console.log( 'No node server, I must be on a GM' );
                 wapi.setProxy('https://');
-                $scope.checkCredentials();
+
+                // we can really bypass ALL the login stuff
+                // because we have a IBAPAUTH cookie set when
+                // we loaded this page.
+                // but we need to set the wapi.session(), somehow
+
+                //$scope.checkCredentials();
+
+                wapi.session({
+                    server: window.location.hostname
+                });
+                $scope.template = "objects.html";
+                $scope.getSchema();
+
             });
     };
     /*
@@ -391,11 +404,11 @@ viewApp.controller('mainController',
 
         // work out which view to show
         // by setting the template
-        if ( vls && vls.authkey ) {
-            console.log ( 're-use credentials', vls);
+        if ( localSettings && localSettings.authkey ) {
+            console.log ( 're-use credentials', localSettings);
 
             // set up the wapi
-            wapi.session( vls );
+            wapi.session( localSettings );
 
             $scope.template = "objects.html";
 

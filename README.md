@@ -2,9 +2,18 @@
 
 This is a quickstart guide to using the infoblox WAPI. It is not intended
 to be a complete set of API docs, those are [available
-here](http://www.infoblox.com.foo/ba/) and
-really are worth the read. This is just a set of quick pointers to get you
+here](https://support.infoblox.com/app/utils/login_form/redirect/docs)
+and really are worth the read. This is just a set of quick pointers to get you
 up to speed
+
+## I tried to read the docs and they don't make any sense
+
+> If you see something, say something
+
+There are probably issues with the documentation (otherwise this page wouldn't exist), but unless you open a bug report it will never get fixed. If you're trying to use the docs and can't find what you need, then get a bug report back with the following info:
+* I wanted to do XXX
+* I was expecting to find YYY in the docs
+* Instead i found ZZZ
 
 ## WAPI, PAPI, RESTful, what's the difference?
 
@@ -131,8 +140,8 @@ are additional HTTP methods that you should be reminded about.  They are:
 
 * GET to get or search for objects
 * POST to add a new object
-* PUT to modify and object (It must already exist in the database)
-* DELETE to remove and object
+* PUT to modify an object (It must already exist in the database)
+* DELETE to remove an object
 
 We will go into detail on these methods later in the guide
 
@@ -259,9 +268,7 @@ just get an empty array:
 
 When you are doing searches you need to add query strings to make your
 search as specific as possible. Every object only supports a subset of
-searchable fields. You will need to dig into the API docs to learn what
-these are. There is a table at the END of every object definition showing
-what fields are Read Only (R/O) and what fields are searchable. Go read it.
+searchable fields.
 
 For example, the query :
 
@@ -290,6 +297,18 @@ combined in any order (E.g : 'name:~')
     ~ Regular expression search. Expressions are unanchored.
     < Less than or equal.
     > Greater than or equal.
+
+## So how do I know what fields are on each object ?
+
+You will need to dig into the API docs to learn what
+these are. There is a table at the **END** of every object definition showing
+what fields are Read Only (R/O) and what fields are searchable.
+
+> Yes, the table is at the **END** of the object description
+
+> You have to **SCROLL DOWN** to find it
+
+Or, just use the table of contents to go to the __next__ object and then __scroll up__
 
 ## Extensible Attributes
 
@@ -388,6 +407,18 @@ You can then check your work with an additional query
 
 The \_ref may also have changed, DO NOT ASSUME that you can re-use the original
 \_ref, always use the one returned by the most recent request.
+
+## How can modify or add an ip address?
+
+> You can't, you won't, dont
+
+Learn the object types, learn nios
+
+Address are **read only**
+
+
+
+
 
 ## Adding an object
 
