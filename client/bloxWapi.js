@@ -110,7 +110,10 @@ angular.module('wapiModule', [])
 
         this.session = function(args) {
             // generate the Authorization and keys
-            var credentials = args.authkey ;
+            var credentials ;
+            if ( args.authkey) {
+                credentials = args.authkey ;
+            }
             if ( args.name && args.password ) {
                 credentials = btoa( args.name + ':' + args.password );
             }
@@ -169,24 +172,22 @@ angular.module('wapiModule', [])
 
             // and angular tries to autotransform the data, so it may or may
             // not be an object already from something that may have been json
-            if ( response.status == 401 ) {
 
-            }
+            if ( response.data ) {
+                if ( response.data.syscall ||
+                     response.data.data ||
+                     response.data.Error ) {
+                     // we are probably a clean object
+                     msg = angular.toJson( response.data );
 
-            if ( response.data.syscall ||
-                 response.data.data ||
-                 response.data.Error ) {
-                 // we are probably a clean object
-                 msg = angular.toJson( response.data );
-
-                 if ( response.data.Error ) {
-                     msg = response.data.Error;
-                 }
+                     if ( response.data.Error ) {
+                         msg = response.data.Error;
+                     }
+                }
             }
 
             if ( response.status == 401 ) {
                 msg = "Authorization Required: You supplied the wrong credentials (e.g., bad password)";
-
             }
 
             // anything else can be taken verbatim no need to convert
