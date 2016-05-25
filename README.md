@@ -224,7 +224,7 @@ examples:
 
 Type in the following url to your browser window
 
-    /wapi/v1.2/v2.3/member?_return_type=json-pretty&_return_fields%2B=comment,extattrs&platform=INFOBLOX
+    /wapi/v2.3/member?_return_type=json-pretty&_return_fields%2B=comment,extattrs&platform=INFOBLOX
 
 Query strings must be URL encoded if you are typing things into a browser, so
 the '%2B' is just an encoding of the '+' character, YMMV.
@@ -249,7 +249,7 @@ Query string 'parameters'
 
     /wapi/v1.2/record:host?name=infoblox
 
-## Searching and modifiers
+## Error handling
 
 All GET requests (searches) will return an ARRAY of objects, even if there is
 an exact match. So you will always get something that look like this:
@@ -265,6 +265,78 @@ If you search didn't match any results you will NOT get an error, you will
 just get an empty array:
 
     [ ]
+
+If you ever get an error you will get back an HTTP error code, and RECORD
+instead of an ARRAY:
+
+    {
+      "Error": "AdmConProtoError: Unknown argument/field: netwdork",
+      "code": "Client.Ibap.Proto",
+      "text": "Unknown argument/field: netwdork",
+      "trace": "  File "/infoblox/common/lib/python/info..."
+    }
+
+And if you had a low level HTTP error, you won't even get JSON (even if you
+asked for it) you may get a server level error message or an XML dump
+
+    <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+    <html><head>
+    <title>404 Not Found</title>
+    </head><body>
+    <h1>Not Found</h1>
+    <p>The requested URL /pwapii/v1.2/record:host was not found on this server.</p>
+    </body></html>
+
+But, When the server returns an error with status code \>= 400, the body is
+always in JSON format, irrespective of any Accept or \_return\_types.
+
+> In case you haven't guessed by now, this can get frustrating after a while.
+
+### Cleaning up the output format
+
+Lets do that last query again, but this time we will add a '_return_as_object=1'
+
+    /wapi/v2.1/member?_return_as_object=1&_return_type=json-pretty&_return_fields%2B=extattrs
+
+What you get back should look a bit like this:
+
+    {
+      "result":
+          [ ...
+
+And we have standardised the format to always be a json record, with the results in an array in the 'result' field. This feature was introduced in WAPI v2.1, But it is a good habit to always use this extra query param.
+
+### Error handling logic
+
+All your error and return messaging handlers are going to have to have to
+have some smarter logic in them. Your best a approach is to test for the
+following :
+
+* set _return_as_object=1
+
+* Check the HTML error code is !=200
+
+* Check if the return text is XML, HTML or JSON
+
+* If the type is JSON, Check if the data is a STRING "", RECORD {}
+
+* If the data is an RECORD, Check if there is an 'Error' field
+
+* If the data is an RECORD, Check if there is an 'result' field
+
+* If there is a result, Check if the length is > 0
+
+* If the data is an STRING, it is a \_ref from a successful PUT or POST
+
+To make things slightly sane, if the error message is in JSON format, The
+returned message conforms to JSON, but is formatted to ensure that the
+first line of the body always contains the text “Error,” an error type,
+and an error message.
+
+It is worth reading the API docs section on 'Error Handling' to get a full
+understanding of this.
+
+## Searching and modifiers
 
 When you are doing searches you need to add query strings to make your
 search as specific as possible. Every object only supports a subset of
@@ -300,7 +372,7 @@ combined in any order (E.g : 'name:~')
 
 ## So how do I know what fields are on each object ?
 
-You will need to dig into the API docs to learn what
+You will need to read into the API docs to learn what
 these are. There is a table at the **END** of every object definition showing
 what fields are Read Only (R/O) and what fields are searchable.
 
@@ -410,15 +482,13 @@ The \_ref may also have changed, DO NOT ASSUME that you can re-use the original
 
 ## How can modify or add an ip address?
 
-> You can't, you won't, dont
+> You can't, you won't, don't
 
-Learn the object types, learn nios
+The unfortunate part to this problem is that you need to learn a bit about how NIOS works and how to admin the syatem, but the short answer is that Address are **read only** synthetic objects.
 
-Address are **read only**
+They only exist because some other object (E.g a HOST or a FIXED ADDRESS) has an IP address.
 
-
-
-
+Addresses, PTR records etc are usually auto generated from the data in some other object. Thus you create the other object, not the address directly.
 
 ## Adding an object
 
@@ -449,54 +519,3 @@ To delete an object, just send a DELETE request to the \_ref url :
 
 And the server will return the same \_ref (which is now useless since the
 object no longer exists)
-
-## Error handling
-
-If you ever get an error you will get back an HTTP error code, and RECORD
-instead of an ARRAY:
-
-    {
-      "Error": "AdmConProtoError: Unknown argument/field: netwdork",
-      "code": "Client.Ibap.Proto",
-      "text": "Unknown argument/field: netwdork",
-      "trace": "  File "/infoblox/common/lib/python/info..."
-    }
-
-And if you had a low level HTTP error, you won't even get JSON (even if you
-asked for it) you may get a server level error message or an XML dump
-
-    <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-    <html><head>
-    <title>404 Not Found</title>
-    </head><body>
-    <h1>Not Found</h1>
-    <p>The requested URL /pwapii/v1.2/record:host was not found on this server.</p>
-    </body></html>
-
-But, When the server returns an error with status code \>= 400, the body is
-always in JSON format, irrespective of any Accept or \_return\_types.
-
-So all your error and return messaging handlers are going to have to have to
-have some smarter logic in them. Your best a approach is to test for the
-following :
-
-* Check the HTML error code is !=200
-
-* Check if the return text is XML, HTML or JSON
-
-* If the type is JSON, Check if the data is a STRING "", RECORD {} or ARRAY
-[]
-
-* If the data is an ARRAY, Check if the length is > 0
-
-* If the data is an RECORD, Check if there is an 'Error' field
-
-* If the data is an STRING, it is a \_ref from a successful PUT or POST
-
-To make things slightly sane, if the error message is in JSON format, The
-returned message conforms to JSON, but is formatted to ensure that the
-first line of the body always contains the text “Error,” an error type,
-and an error message.
-
-It is worth reading the API docs section on 'Error Handling' to get a full
-understanding of this.
