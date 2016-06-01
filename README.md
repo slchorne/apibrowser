@@ -18,7 +18,7 @@ There are probably issues with the documentation (otherwise this page wouldn't e
 ## WAPI, PAPI, RESTful, what's the difference?
 
 NIOS has 2 APIs. There is the legacy perl based API, also known as the
-PAIP (for Perl API), and there is the newer RESTful API, known as the
+PAPI (for Perl API), and there is the newer RESTful API, known as the
 WAPI (for Web API). We're dealing with the WAPI in this document.
 
 ## Instant gratification
@@ -63,10 +63,10 @@ You should now get something that looks like this :
 But that's it, you're done, go take break, you now know the fundamentals
 of making a query using the WAPI.
 
-Note: the WAPI will also return JSON by default if you send a content type
-in the request header:
-
-    Content-Type: application/json
+> Note: the WAPI will also return JSON by default if you send a content type
+> in the request header:
+>
+>    *Content-Type: application/json*
 
 ## Authentication
 
@@ -226,30 +226,36 @@ Type in the following url to your browser window
 
     /wapi/v2.3/member?_return_type=json-pretty&_return_fields%2B=comment,extattrs&platform=INFOBLOX
 
-Query strings must be URL encoded if you are typing things into a browser, so
-the '%2B' is just an encoding of the '+' character, YMMV.
+*(Query strings must be URL encoded if you are typing things into a browser, so the '%2B' is just an encoding of the '+' character, YMMV.)*
 
-### Essentially there are 3 kinds of query string variables.
+### The different types of query strings
 
-Query string 'Arguments'
-    Are used to specify general options or method
+Essentially there are 3 kinds of query string variables:
+
+* Query string 'arguments'
+
+Are used to specify general options or method
 specific options and data for the request. All options start with the
 character '_' (underscore) :
 
     /wapi/v1.2/record:host?_return_fields+=comment&name~=infoblox
 
-Query string 'functions'
-    Are associated with particular objects, only work with POST methods
+* Query string 'functions'
+
+Are associated with particular objects, only work with POST methods
 and usually return calculated values :
 
     /network/ZG5zLm5ldHdvcmskMTA==?_function=next_available_ip&num=3
 
-Query string 'parameters'
-    Are almost always modifiers on a query to narrow the search:
+* Query string 'parameters'
+
+Are almost always modifiers on a query to narrow the search:
 
     /wapi/v1.2/record:host?name=infoblox
 
 ## Error handling
+
+So at this point we need to digress into errors and how to clean things up a bit
 
 All GET requests (searches) will return an ARRAY of objects, even if there is
 an exact match. So you will always get something that look like this:
@@ -338,6 +344,8 @@ understanding of this.
 
 ## Searching and modifiers
 
+So, we've now got a handle on some of the query string params, we can working on searching in more detail.
+
 When you are doing searches you need to add query strings to make your
 search as specific as possible. Every object only supports a subset of
 searchable fields.
@@ -399,11 +407,11 @@ Or even this
 
 ## UIDs and refs
 
-By now you should have a handle on how to perform reads to the database, what about
+By now you know about how to perform reads to the database, what about
 updates?
 
 To modify an object we need to know it's unique id, this is
-always returned with every object and is in the \_ref field :
+always returned with every object and is in the **\_ref** field :
 
     [
         {
@@ -484,11 +492,13 @@ The \_ref may also have changed, DO NOT ASSUME that you can re-use the original
 
 > You can't, you won't, don't
 
-The unfortunate part to this problem is that you need to learn a bit about how NIOS works and how to admin the syatem, but the short answer is that Address are **read only** synthetic objects.
+The unfortunate part to this problem is that you need to learn a bit about how NIOS works and how to admin the system, but the short answer is:
+
+> Address are **read only** synthetic objects.
 
 They only exist because some other object (E.g a HOST or a FIXED ADDRESS) has an IP address.
 
-Addresses, PTR records etc are usually auto generated from the data in some other object. Thus you create the other object, not the address directly.
+Addresses, PTR records, etc are usually auto generated from the data in some other object. Thus you create the other object, not the address directly.
 
 ## Adding an object
 
@@ -519,3 +529,68 @@ To delete an object, just send a DELETE request to the \_ref url :
 
 And the server will return the same \_ref (which is now useless since the
 object no longer exists)
+
+## A decidedly complex example
+
+Lastly, Since this gets asked from time to time, it is possible to do some fairly complex things with the WAPI, and a lot of that is really not in the scope of a 'quickstart' guide. (It is worth readinf up on the 'request' and 'fileop' objects). However this is how you would
+
+* add a host record
+* with Extensible attributes
+* with multiple addresses
+* using the next_available_ip function
+* selecting a network based on some extensible attributes
+
+
+POST to the correct object type:
+
+    POST /wapi/v1.2/record:host
+    # Don't forget the Header(s)...
+    Content-Type: application/json
+    Authorization: Basic fghwrth23aw4==
+
+With a body containing the required fields:
+
+    {
+        "name": "host37",
+        "view":"default",
+        "ipv4addrs": [
+            {
+                "mac":"aabbccddeefc",
+                "configure_for_dhcp":false,
+                "ipv4addr": {
+                    "_result_field": "ips"
+                    "_object_function": "next_available_ip",
+                    "_object": "network",
+                    "_object_parameters": {
+                        "*Agency:": "TXDOT",
+                        "*Site:": "ADC",
+                        "*Zone:": "Non-DMZ",
+                        "network_view": "default"
+                    },
+                }
+            },
+            {
+                "mac":"aabbccddeefd",
+                "configure_for_dhcp":false,
+                "ipv4addr": {
+                    "_result_field": "ips"
+                    "_object_function": "next_available_ip",
+                    "_object": "network",
+                    "_object_parameters": {
+                        "*Agency:": "TXDOT",
+                        "*Site:": "ADC",
+                        "*Zone:": "Non-DMZ",
+                        "network_view": "default"
+                    },
+                }
+            }
+        ],
+        "extattrs": {
+            "Work Order": { "value": "REQ98765" },
+            "Tenant ID": { "value": "Customer 1" },
+            "CMP Type": { "value": "MuleSoft" },
+            "VM ID": { "value": "123456" },
+            "VM Name": { "value": "my vm name" },
+            "Cloud API Owned": { "value": "True" }
+        }
+    }
