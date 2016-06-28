@@ -45,7 +45,7 @@
         <!-- text fields -->
         <div class="col-sm-5" ng-if="fieldIsText(field)">
           <input type="text" class="form-control input-sm"
-              ng-change="generateSearchQuery()"
+              ng-change="getFormParams()"
               ng-model="field.fieldValue"
               id="search{{field.name}}" placeholder="">
         </div>
