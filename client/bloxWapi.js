@@ -25,6 +25,9 @@ angular.module('wapiModule', [])
         proxy: '/wapip/',
         version: '2.0',
         maxVersion : null,
+        baseParams : {
+            '_return_as_object' : 1
+        }
     })
 
 
@@ -45,6 +48,10 @@ angular.module('wapiModule', [])
 
         this.getConfig = function() {
             return wapiConfig ;
+        };
+
+        this.getBaseParams = function() {
+            return me.getConfig().baseParams ;
         };
 
         //

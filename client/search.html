@@ -111,7 +111,8 @@
             ng-change="generateSearchQuery()"
             ng-model="schemaFields._also_return"
             >
-        <option ng-repeat="field in schemaFields | filter: nonsearchableFields">{{field.name}}</option>
+        <!-- <option ng-repeat="field in schemaFields | filter: nonsearchableFields">{{field.name}}</option> -->
+        <option ng-repeat="field in schemaFields">{{field.name}}</option>
         </select>
         </div>
     </div>
@@ -131,7 +132,7 @@
 <div class="container-fluid" ng-show="searchResults">
   <div class="row">
       <div class="col-sm-offset-3 col-sm-6">
-          <json-formatter json="searchResults" open="2"> </json-formatter>
+          <json-formatter json="searchResults.result" open="2"> </json-formatter>
       </div>
   </div>
 </div>

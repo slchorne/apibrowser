@@ -205,6 +205,18 @@ viewApp.controller('mainController',
 
         var qs = [];
         var rfields = [];
+
+        // remember to include any baseParams
+        // this should be in the core of bloxWapi.js but the calls
+        // to _schema kinda break this process
+
+        // we should really just return a struct and pass this to
+        // bloxWapi to make the querystring
+        angular.forEach(wapi.getBaseParams(), function(value, key) {
+            // console.log( 'gbp',value,key);
+            qs.push( key + '=' + value );
+        });
+
         angular.forEach($scope.schemaFields, function(field){
             if ( field.fieldValue ) {
                 var qv = field.name ;
@@ -236,6 +248,8 @@ viewApp.controller('mainController',
 
         // (and for display only)
         $scope.searchUrl = 'https://'+ wapi.getPath() + searchPath ;
+
+        console.log( 'generateSearchQuery' , searchPath);
 
         return searchPath ;
 
