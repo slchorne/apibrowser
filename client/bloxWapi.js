@@ -22,9 +22,12 @@ angular.module('wapiModule', [])
     .value('wapiConfig',{
         server: null,
         url: null,
-        proxy: '/wapip/',
-        version: '2.0',
+        proxy: '/wapip/',   // bogus url for node proxies
+        version: '2.1', // min version for _return_as_object
         maxVersion : null,
+        baseParams : {
+            '_return_as_object' : 1
+        }
     })
 
 
@@ -45,6 +48,10 @@ angular.module('wapiModule', [])
 
         this.getConfig = function() {
             return wapiConfig ;
+        };
+
+        this.getBaseParams = function() {
+            return me.getConfig().baseParams ;
         };
 
         //
@@ -151,13 +158,47 @@ angular.module('wapiModule', [])
         };
 
         //
+        // generate a querystring from the args and
+        // anything in the base config
+        //
+        this.getQueryString = function( args ) {
+            var qs = [];
+            angular.forEach(this.getBaseParams(), function(value, key) {
+                // console.log( 'gbp',value,key);
+                qs.push( key + '=' + value );
+            });
+            angular.forEach(args, function(value, key) {
+                // console.log( 'gbp',value,key);
+                var param = key;
+                if (value) {
+                    param= param + "=" + value;
+                }
+                qs.push( param );
+            });
+
+            // console.log ( "getQueryString" , qs );
+
+            if ( qs ) {
+                return "?" + qs.join('&');
+            }
+            return "";
+
+
+        };
+
+        //
         // $http handlers...
         // build a call from the config and the path
         // return the $promise so we can use '.then()'
         //
-        this.get = function( path ) {
+        this.get = function( path , args ) {
+            var qs = this.getQueryString(args);
             var conf = me.getConfig();
-            return $http.get(conf.url + path , conf.httpConfig );
+            var myurl = conf.url + path + qs ;
+
+            // console.log ( "wapi.get", myurl);
+
+            return $http.get(myurl , conf.httpConfig );
         };
 
         //

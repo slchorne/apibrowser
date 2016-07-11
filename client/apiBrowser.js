@@ -114,7 +114,7 @@ viewApp.controller('mainController',
         $scope.objectErrors = "Getting supported objects...";
 
         // $http.get(wapi.url +'?_schema' , wapi.headers )
-        wapi.get('?_schema')
+        wapi.get("",{_schema:null})
             .then(function(response){
                 // success
                 // console.log( 'schema' , response.data );
@@ -135,7 +135,7 @@ viewApp.controller('mainController',
     // see if out version numbers are out of date
     //
     $scope.checkApiVersion = function(data) {
-        var vlist = data.supported_versions;
+        var vlist = data.result.supported_versions;
 
         var maxRev = vlist[vlist.length-1];
         wapi.setVersion(maxRev);
@@ -149,14 +149,14 @@ viewApp.controller('mainController',
         // load the correct schema
 
         $scope.httpErrors = null;
-        wapi.get('?_schema')
+        wapi.get("",{_schema:null})
             .then(function(response){
                 // success
-                console.log( 'new schema' , response.data );
+                console.log( 'new schema' , response.data.result );
 
                 // and now load this in the HTML
                 // and switch the views
-                $scope.listObjects(response.data);
+                $scope.listObjects(response.data.result);
                 $scope.objectErrors = null ;
 
                 // $scope.$parent.goTo('objects',response.data);
@@ -184,17 +184,17 @@ viewApp.controller('mainController',
     };
 
     //
-    // handler for when we input search values to generate
+    // return anythings from the form as an object to send to the wapi
     // a real-time query string.
     //
-    $scope.generateSearchQuery = function(el) {
+    $scope.getFormParams = function(el) {
         // console.log('field change',el);
 
         // the html will add a new field to the schema 'fieldValue'
         // via ngModel, and some modifier flags
         // which we can use to extract the values and form a query string
 
-        // We have to process each name value pair and build up a query string
+        // We have to process each name value pair and build up param object
         // so we may as well just walk the whole array
         // and not start with a filter
 
@@ -205,15 +205,28 @@ viewApp.controller('mainController',
 
         var qs = [];
         var rfields = [];
+        var params = {};
+
+        // remember to include any baseParams
+        // this should be in the core of bloxWapi.js but the calls
+        // to _schema kinda break this process
+
+        // we should really just return a struct and pass this to
+        // bloxWapi to make the querystring
+        angular.forEach(wapi.getBaseParams(), function(value, key) {
+            // console.log( 'gbp',value,key);
+            qs.push( key + '=' + value );
+        });
+
         angular.forEach($scope.schemaFields, function(field){
             if ( field.fieldValue ) {
-                var qv = field.name ;
-                qv += field.modCase ? ':' : '' ;
-                qv += field.modContains ? '~' : '' ;
-                qv += '=' + field.fieldValue;
-                qs.push(qv);
+                var qf = field.name ;
+                qf += field.modCase ? ':' : '' ;
+                qf += field.modContains ? '~' : '' ;
+
+                params[qf]=field.fieldValue;
                 rfields.push(field.name);
-                // console.log ('qv', qv, field );
+                // console.log ('qf', qf, field );
             }
         });
 
@@ -221,25 +234,22 @@ viewApp.controller('mainController',
         if ( $scope.schemaFields._also_return ) {
             rfields.push($scope.schemaFields._also_return);
         }
-
-        // var rstring = '_return_fields%2B='+ rfields.join(',');
-        // qs.push( rstring );
-        qs.push( '_return_fields%2B='+ rfields.join(',') );
+        params['_return_fields%2B']=rfields.join(',');
 
         // 'encodeURIComponent' is too strong a hammer
         // var queryString = encodeURIComponent( qs.join('&') );
         // var queryString = encodeURI( qs.join('&') );
-        var queryString = qs.join('&');
-
-        // reset the search url
-        var searchPath = $scope.myObject + '?' + queryString;
 
         // (and for display only)
+        var queryString = wapi.getQueryString(params);
+        var searchPath = $scope.myObject + queryString;
         $scope.searchUrl = 'https://'+ wapi.getPath() + searchPath ;
 
-        return searchPath ;
+        // console.log( 'getFormParams' , searchPath);
+        // console.log( 'getFormParams' , params);
 
-        // var searchPath = $scope.generateSearchQuery();
+        return params ;
+
 
     };
 
@@ -249,16 +259,16 @@ viewApp.controller('mainController',
     $scope.searchForObject = function(el) {
         // console.log('search fields',$scope.schemaFields);
 
-        var searchPath = $scope.generateSearchQuery();
-        // (display only, should be redundant)
-        $scope.searchUrl = 'https://'+ wapi.getPath() + searchPath ;
+        var params = $scope.getFormParams();
+
+        // update display strings
         $scope.searchErrors = null;
         $scope.searchResults = "Searching..." ;
+        $scope.httpErrors = null;
 
         // and punt to a search
-        $scope.httpErrors = null;
         // $http.get( wapi.url + searchPath , wapi.headers )
-        wapi.get( searchPath )
+        wapi.get( $scope.myObject , params )
             .then(function(response){
                 // success
                 // console.log( 'object search ' , response.data );
@@ -326,17 +336,18 @@ viewApp.controller('mainController',
         // get the schema for this object and expose it to the html
         $scope.httpErrors = null;
 
-        wapi.get( myObj + '?_schema' )
+        wapi.get(myObj,{_schema:null})
             .then(function(response){
                 // success
-                console.log( 'object schema' , response.data );
+                var result = response.data.result;
+                console.log( 'object schema' , result );
 
                 // then just expose the data to the HTML
                 // and process it there
                 $scope.schemaLoaded = true ;
-                $scope.schemaFields = response.data.fields;
+                $scope.schemaFields = result.fields;
 
-                if ( response.data.fields.length === 0 ) {
+                if ( result.fields.length === 0 ) {
                     $scope.schemaErrors = "This object has no searchable fields";
 
                 }
