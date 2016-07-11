@@ -22,8 +22,8 @@ angular.module('wapiModule', [])
     .value('wapiConfig',{
         server: null,
         url: null,
-        proxy: '/wapip/',
-        version: '2.0',
+        proxy: '/wapip/',   // bogus url for node proxies
+        version: '2.1', // min version for _return_as_object
         maxVersion : null,
         baseParams : {
             '_return_as_object' : 1

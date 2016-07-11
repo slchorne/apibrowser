@@ -39,36 +39,24 @@
 </head>
 <body ng-controller="mainController">
 
-    <!-- HEADER AND NAVBAR -->
-    <!--
-                <a class="navbar-brand" href="/">WAPI Browser</a>
-    -->
 
-    <header>
-        <nav class="navbar navbar-default navbar-fixed-top">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <!-- don't use <p> tags -->
-                <a class="navbar-brand navbar-left" >WAPI Browser</a>
-            </div>
+    <!-- basic nav that is more responsive -->
+    <ul class="nav nav-pills navbar-fixed-top">
+        <li class="disabled"><a href=""><b>
+            WAPI Browser</b></a></li>
+        <li ng-show="template != 'objects.html'"><a href="" ng-click="goTo('objects')">
+            <i class="fa fa-list"></i>
+            Objects</a></li>
+        <li ng-show="template != 'settings.html'"><a href="" ng-click="goTo('settings')">
+            <i class="fa fa-cog"></i>
+            Settings</a></li>
+        <li ng-show="template == 'settings.html'"><a href="" ng-click="logout('settings')">
+            <i class="fa fa-sign-out"></i>
+            Logout</a></li>
+    </ul>
 
-                <!-- no href required in this context for the <a> tag-->
-            <ul class="nav navbar-nav navbar-right">
-                <li ng-show="template != 'objects.html'"><a href="" ng-click="goTo('objects')">
-                    <i class="fa fa-list"></i>
-                    Objects</a></li>
-                <li ng-show="template != 'settings.html'"><a href="" ng-click="goTo('settings')">
-                    <i class="fa fa-cog"></i>
-                    Settings</a></li>
-                <li ng-show="template == 'settings.html'"><a href="" ng-click="logout('settings')">
-                    <i class="fa fa-sign-out"></i>
-                    Logout</a></li>
-            </ul>
-            <!--
-        -->
-        </div>
-        </nav>
-    </header>
+
+    <!-- <nav class="navbar navbar-default navbar-fixed-top"> -->
 
     <!-- MAIN CONTENT AND INJECTED VIEWS -->
 
