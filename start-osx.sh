@@ -4,5 +4,5 @@
 # the start_browser will sleep to wait for node to launch
 osascript server/start_browser.osascript &
 echo "..Standby - starting a server then launching a browser...\n"
-server/bin/node server/server.js
+bin/osx/node server/server.js
 # open -F http://localhost:3000
