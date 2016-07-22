@@ -1,6 +1,11 @@
+# The API
+
 # Quickstart
 
-There are 2 options:
+The WAPI quickstart guide is
+[available here](apiguide/README.md)
+
+To run the API browser there are 2 options:
 
 * Install the client code on a running grid
 * Install a standalone version on a PC/laptop
